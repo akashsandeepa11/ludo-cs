@@ -136,7 +136,7 @@
                         players[index].p[i].location,    
                         (players[index].p[i].location+diceVal)%52,
                         diceVal,
-                        players[index].isClockwise? "clockwise" : "counter-clockwise"
+                        players[index].p[i].isClockwise? "clockwise" : "counter-clockwise"
                         );
                         
                     players[index].p[i].distance+=diceVal;
@@ -170,11 +170,7 @@
                 players[index].p[i].distance != -1 &&
                 !isOnBoard){
 
-                if(56-players[index].p[i].distance == diceVal){
-                    players[index].p[i].location+=diceVal;
-                    players[index].p[i].distance+=diceVal;
-                    winPlayer(players, winners, index, i);
-                }           
+                approchToHome(players, diceVal, index, winners, i);
 
                 return;
             }
@@ -183,8 +179,14 @@
         
     }
 
-    void approchToHome(){
+    void approchToHome(struct player *players, short diceVal, short index, short *winners, short pieceId){
 
+        if(56-players[index].p[pieceId].distance == diceVal){
+            players[index].p[pieceId].location+=diceVal;
+            players[index].p[pieceId].distance+=diceVal;
+            winPlayer(players, winners, index, pieceId);
+        }           
+    
     }
 
     void baseToStart(struct player *player){
@@ -322,10 +324,11 @@
         srand(time(NULL));
 
         struct player players[] = {
-        {0, "Yellow", 0, 0, true, {{0, -1, -1, 0, "Y1"}, {1, -1, -1, 0, "Y2"}, {2, -1, -1, 0, "Y3"}, {3, -1, -1, 0, "Y4"}}},
-        {1, "Blue", 0, 0, true, {{0, -1, -1, 0, "B1"}, {1, -1, -1, 0, "B2"}, {2, -1, -1, 0, "B3"}, {3, -1, -1, 0, "B4"}}},
-        {2, "Red", 0, 0, true, {{0, -1, -1, 0, "R1"}, {1, -1, -1, 0, "R2"}, {2, -1, -1, 0, "R3"}, {3, -1, -1, 0, "R4"}}},
-        {3, "Green", 0, 0, true, {{0, -1, -1, 0, "G1"}, {1, -1, -1, 0, "G2"}, {2, -1, -1, 0, "G3"}, {3, -1, -1, 0, "G4"}}}};
+        {0, "Yellow", 0, 0, {{0, -1, -1, 0, true, "Y1"}, {1, -1, -1, 0, true, "Y2"}, {2, -1, -1, 0, true, "Y3"}, {3, -1, -1, 0, true, "Y4"}}},
+        {1, "Blue", 0, 0, {{0, -1, -1, 0, true, "B1"}, {1, -1, -1, 0, true, "B2"}, {2, -1, -1, 0, true, "B3"}, {3, -1, -1, 0, true, "B4"}}},
+        {2, "Red", 0, 0, {{0, -1, -1, 0, true, "R1"}, {1, -1, -1, 0, true, "R2"}, {2, -1, -1, 0, true, "R3"}, {3, -1, -1, 0, true, "R4"}}},
+        {3, "Green", 0, 0, {{0, -1, -1, 0, true, "G1"}, {1, -1, -1, 0, true, "G2"}, {2, -1, -1, 0, true, "G3"}, {3, -1, -1, 0, true, "G4"}}}};
+        
         short winners[4]={-1, -1, -1, -1};   
 
         printf("The red player has four (04) pieces named R1, R2, R3 and R4.\n");

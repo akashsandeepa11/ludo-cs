@@ -7,6 +7,7 @@ struct piece{
     short location;
     short distance;
     short capCount;
+    bool isClockwise;
     char pieceName[3];
 };
 
@@ -15,7 +16,6 @@ struct player {
     char playerName[7];
     short boardPiecesCount;
     short winPiecesCount;
-    bool isClockwise;
     struct piece p[4];
 };
 
@@ -29,6 +29,7 @@ void playerAction(struct player *players, short diceVal, short index, short *win
 void iterateTheGame(struct player *players, short *winners);
 void printPieceStates(struct player *players); 
 void printWinners(struct player *players, short *winners);
+void approchToHome(struct player *players, short diceVal, short index, short *winners, short pieceId);
 void game();
 
 #endif
