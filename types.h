@@ -20,16 +20,18 @@ struct player {
 };
 
 short rollDice(char *name);
-short chooseFirstPlayer(struct player *players);
-void capturePiece(struct player *players, short index, short pieceId);
-void movePlayer(struct player *players, short diceVal, short index, short *winners);
-void baseToStart(struct player *player);
-void winPlayer(struct player *players, short *winners, short index, short i);
-void playerAction(struct player *players, short diceVal, short index, short *winners);
-void iterateTheGame(struct player *players, short *winners);
-void printPieceStates(struct player *players); 
-void printWinners(struct player *players, short *winners);
-void approchToHome(struct player *players, short diceVal, short index, short *winners, short pieceId);
+bool tossCoin(short playerId, short pieceId);
+short chooseFirstPlayer();
+bool isSpecialLocation(short location, short *locArr, short len);
+void capturePiece(short index, short pieceId);
+void movePlayer(short diceVal, short index);
+void approchToHome(short diceVal, short index, short pieceId);
+void baseToStart(short playerIndex);
+void winPlayer(short index, short i);
+void playerAction(short diceVal, short index);
+void iterateTheGame();
+void printPieceStates();
+void printWinners();
 void game();
 
 #endif
