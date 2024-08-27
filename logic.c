@@ -6,15 +6,15 @@
 
     #define BASE -1
     #define STARTPOINT 0
-    #define HOMESTRAIGHT(i) ((i) ? 51 : 55)
-    #define HOME(i) ((i) ? 56 : 60)
+    #define HOMEPATH 5
+    #define HOME(playerId, pieceId) (players[playerId].p[pieceId].homeStraightDis + HOMEPATH)
 
 
     struct player players[] = {
-        {0, "Yellow", 0, 0, {{0, -1, -1, 0, true, "Y1"}, {1, -1, -1, 0, true, "Y2"}, {2, -1, -1, 0, true, "Y3"}, {3, -1, -1, 0, true, "Y4"}}},
-        {1, "Blue", 0, 0, {{0, -1, -1, 0, true, "B1"}, {1, -1, -1, 0, true, "B2"}, {2, -1, -1, 0, true, "B3"}, {3, -1, -1, 0, true, "B4"}}},
-        {2, "Red", 0, 0, {{0, -1, -1, 0, true, "R1"}, {1, -1, -1, 0, true, "R2"}, {2, -1, -1, 0, true, "R3"}, {3, -1, -1, 0, true, "R4"}}},
-        {3, "Green", 0, 0, {{0, -1, -1, 0, true, "G1"}, {1, -1, -1, 0, true, "G2"}, {2, -1, -1, 0, true, "G3"}, {3, -1, -1, 0, true, "G4"}}}};
+        {0, "Yellow", 0, 0, {{0, -1, -1, 51, 0, true, "Y1"}, {1, -1, -1, 51, 0, true, "Y2"}, {2, -1, -1, 51, 0, true, "Y3"}, {3, -1, -1, 51, 0, true, "Y4"}}},
+        {1, "Blue", 0, 0, {{0, -1, -1, 51, 0, true, "B1"}, {1, -1, -1, 51, 0, true, "B2"}, {2, -1, -1, 51, 0, true, "B3"}, {3, -1, -1, 51, 0, true, "B4"}}},
+        {2, "Red", 0, 0, {{0, -1, -1, 51, 0, true, "R1"}, {1, -1, -1, 51, 0, true, "R2"}, {2, -1, -1, 51, 0, true, "R3"}, {3, -1, -1, 51, 0, true, "R4"}}},
+        {3, "Green", 0, 0, {{0, -1, -1, 51, 0, true, "G1"}, {1, -1, -1, 51, 0, true, "G2"}, {2, -1, -1, 51, 0, true, "G3"}, {3, -1, -1, 51, 0, true, "G4"}}}};
         
     short winners[4]={-1, -1, -1, -1};   
 
@@ -30,7 +30,12 @@
     bool tossCoin(short playerId, short pieceId){
     
         short r=(rand() % 2);
-        players[playerId].p[pieceId].isClockwise= r;
+        players[playerId].p[pieceId].isClockwise = r;
+        
+        if(!r){
+            players[playerId].p[pieceId].homeStraightDis = 55;
+        }
+        
         printf("The %s tossed a %s\n", players[playerId].p[pieceId].pieceName, r? "Head" : "Tail");
         printf("%s will go %s\n", players[playerId].p[pieceId].pieceName, r? "Clockwise" : "Counter-Clockwise");
         return r;
@@ -109,10 +114,9 @@
         
         for(short i=0; i<4; i++){
             if(index!=i){
-            for(short j=0; j<4; j++){
-                    if(players[index].p[pieceId].location==players[i].p[j].location && 
-                        players[i].p[j].distance <= HOMESTRAIGHT(players[i].p[j].isClockwise) &&
-                        players[i].p[j].distance < HOMESTRAIGHT(players[i].p[j].isClockwise) &&
+                for(short j=0; j<4; j++){
+                    if(players[index].p[pieceId].location == players[i].p[j].location && 
+                        players[i].p[j].distance < players[i].p[j].homeStraightDis &&
                         !isSpecialLocation(players[index].p[pieceId].location, specialLocations, 8)){
 
                         printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
@@ -122,8 +126,12 @@
                             players[i].playerName,
                             players[i].p[j].pieceName);
                         
+                        players[index].p[pieceId].capCount++;
+                        
                         players[i].p[j].distance=-1;
                         players[i].p[j].location=-1;
+                        players[i].p[j].capCount=0;
+                        players[i].p[j].homeStraightDis=51;
                         players[i].boardPiecesCount--;
 
                         printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n", 
@@ -133,7 +141,7 @@
                         
                         break;
                     }
-            } 
+                } 
             }
         }   
     }
@@ -151,14 +159,22 @@
                 players[index].p[i].location = 51 + (players[index].p[i].location + 1);
             }
         }
+
+        if(players[index].p[i].capCount ==  0 &&
+            players[index].p[i].distance >= players[index].p[i].homeStraightDis){
+
+            players[index].p[i].homeStraightDis = players[index].p[i].homeStraightDis + 52;
+            
+        }
     }
 
     void movePlayer(short diceVal, short index){
+
         bool isOnBoard=false;
 
         //Check any piece on the base, then first priority will be get tha piece into the starting point
         for(short k=0; k<4; k++){
-            if(players[index].p[k].distance < HOMESTRAIGHT(players[index].p[k].isClockwise) && 
+            if(players[index].p[k].distance < players[index].p[k].homeStraightDis && 
                 players[index].p[k].distance > -1){
                 
                 isOnBoard=true;
@@ -167,16 +183,20 @@
         }
 
         for(short i=0; i<4; i++){
-            if(players[index].p[i].distance < HOMESTRAIGHT(players[index].p[i].isClockwise) && 
+
+            if(players[index].p[i].distance < players[index].p[i].homeStraightDis && 
                 players[index].p[i].distance != -1 && 
                 players[index].boardPiecesCount > 0){
                     
                 short tmpLoc=players[index].p[i].location;
-                
-                if(players[index].p[i].distance+diceVal < HOMESTRAIGHT(players[index].p[i].isClockwise)){
 
-                    updateLocation(index, i, diceVal);
-                    players[index].p[i].distance+=diceVal;
+                players[index].p[i].distance+=diceVal;
+                updateLocation(index, i, diceVal);
+                
+                if(players[index].p[i].distance < players[index].p[i].homeStraightDis){
+
+                    // players[index].p[i].distance+=diceVal;
+                    // updateLocation(index, i, diceVal);
 
                     printf("%s moves piece %s from location L%d to L%d by %d units in %s direction.\n", 
                         players[index].playerName, 
@@ -187,38 +207,46 @@
                         players[index].p[i].isClockwise? "Clockwise" : "Counter-Clockwise"
                         );
                         
-
                     capturePiece(index, i);
 
                     return;
 
-                }else if(players[index].p[i].distance+diceVal >= HOMESTRAIGHT(players[index].p[i].isClockwise) ){
+                }else if(players[index].p[i].distance>= players[index].p[i].homeStraightDis){
 
-                    players[index].p[i].distance+=diceVal;
-                    updateLocation(index, i, diceVal);
+                    // players[index].p[i].distance+=diceVal;
+                    // updateLocation(index, i, diceVal);
 
-                    if(players[index].p[i].distance==HOME(players[index].p[i].isClockwise)){
-                        winPlayer(index, i);
+                    if(players[index].p[i].distance == HOME(index, i) &&
+                        players[index].p[i].capCount > 0){
+                                                    
+                        winPlayer(index, i);                            
+
+                        //players[index].p[i].distance = players[index].p[i].distance % HOMESTRAIGHT(players[index].p[i].isClockwise);
+                        
                         return;
                     }
-                    
-                        
+                                           
                     printf("%s moves piece %s from L%d to Home Staight and %d cells far from home.\n", 
                         players[index].playerName, 
                         players[index].p[i].pieceName, 
                         tmpLoc,
-                        HOME(players[index].p[i].isClockwise) - players[index].p[i].distance);
+                        HOME(index, i) - players[index].p[i].distance);
 
                     return;
                 }
                 
-            }else if(players[index].p[i].distance < HOME(players[index].p[i].isClockwise) && 
-                players[index].p[i].distance >= HOMESTRAIGHT(players[index].p[i].isClockwise) && 
+            }else if(players[index].p[i].distance < HOME(index, i) && 
+                players[index].p[i].distance >= players[index].p[i].homeStraightDis && 
                 players[index].p[i].distance != -1 &&
                 !isOnBoard){
 
-                approchToHome(diceVal, index, i);
+                if(players[index].p[i].capCount > 0){
+                    approchToHome(diceVal, index, i);
+                    return;
+                }    
 
+                // players[index].p[i].distance = players[index].p[i].distance % HOMESTRAIGHT(players[index].p[i].isClockwise);
+ 
                 return;
             }
             
@@ -228,7 +256,7 @@
 
     void approchToHome(short diceVal, short index, short pieceId){
 
-        if(HOME(players[index].p[pieceId].isClockwise) - players[index].p[pieceId].distance == diceVal){
+        if(HOME(index, pieceId) - players[index].p[pieceId].distance == diceVal){
             players[index].p[pieceId].location+=diceVal;
             players[index].p[pieceId].distance+=diceVal;
             winPlayer(index, pieceId);
@@ -239,11 +267,11 @@
     void baseToStart(short playerIndex){
 
         for(short i=0; i<4; i++){
-            if(players[playerIndex].p[i].distance==-1){
+            if(players[playerIndex].p[i].location==-1){
                 
                 players[playerIndex].boardPiecesCount++;
                 players[playerIndex].p[i].distance=0;
-                players[playerIndex].p[i].location=2+(13*(players[playerIndex].index));   
+                players[playerIndex].p[i].location = 2 + (13*(players[playerIndex].index));   
 
                     // printf("Location: L%d", players[playerIndex].p[i].location);
                 printf("%s player moves piece %s to the starting point L%d.\n", players[playerIndex].playerName, 
@@ -263,7 +291,7 @@
     }
 
     void winPlayer(short index, short i){
-        if(players[index].p[i].distance >= HOME(players[index].p[i].distance)){
+        if(players[index].p[i].distance >= HOME(index, i)){
             players[index].winPiecesCount++;
             players[index].boardPiecesCount--;
             printf(">> %s piece reached to the Home . <<\n", players[index].p[i].pieceName);
@@ -323,7 +351,7 @@
         short firstPlayer=chooseFirstPlayer(players);
         short j=firstPlayer;
 
-        do{
+        while(1){
             short diceVal;
             short isSixCount=3;
             do{
@@ -349,7 +377,7 @@
                 printPieceStates();
             }
 
-        }while(1);
+        }
 
     }
 
@@ -364,22 +392,34 @@
             for(short i=0; i<4; i++){
             
                 printf("Piece %s - > ", players[k].p[i].pieceName);
-                if(players[k].p[i].distance==BASE){
+                if(players[k].p[i].distance==BASE){ 
             
                     printf("Base");
             
-                }else if(players[k].p[i].distance >= HOMESTRAIGHT(players[k].p[i].isClockwise) && 
-                    players[k].p[i].distance < HOME(players[k].p[i].isClockwise)){
+                }else if(players[k].p[i].distance >= players[k].p[i].homeStraightDis && 
+                    players[k].p[i].distance < HOME(k, i) &&
+                    players[k].p[i].capCount > 0 ){
             
-                    printf("%d cells to reach home.", HOME(players[k].p[i].isClockwise) - players[k].p[i].distance);
+                    printf("%d cells to reach home. cap:%d  dis:%d   home:%d  c:%d", HOME(k, i) - players[k].p[i].distance, 
+                        players[k].p[i].capCount, 
+                        players[k].p[i].distance,
+                        players[k].p[i].homeStraightDis,
+                        players[k].p[i].isClockwise);
             
-                }else if(players[k].p[i].distance >= HOME(players[k].p[i].isClockwise)){
+                }else if(players[k].p[i].distance >= HOME(k, i) &&
+                    players[k].p[i].capCount > 0){
             
-                    printf("Home");
+                    printf("Home cap:%d  dis:%d  home:%d  c:%d", players[k].p[i].capCount,
+                        players[k].p[i].distance,
+                        players[k].p[i].homeStraightDis,
+                        players[k].p[i].isClockwise);
             
                 }else{
             
-                    printf("L%d", players[k].p[i].location);
+                    printf("L%d - cap:%d  dis:%d  home:%d  c:%d", players[k].p[i].location, players[k].p[i].capCount, 
+                        players[k].p[i].distance,
+                        players[k].p[i].homeStraightDis,
+                        players[k].p[i].isClockwise);
             
                 }
             

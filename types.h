@@ -6,6 +6,7 @@ struct piece{
     short index;
     short location;
     short distance;
+    short homeStraightDis;
     short capCount;
     bool isClockwise;
     char pieceName[3];
