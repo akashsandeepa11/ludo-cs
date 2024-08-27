@@ -25,6 +25,7 @@ bool tossCoin(short playerId, short pieceId);
 short chooseFirstPlayer();
 bool isSpecialLocation(short location, short *locArr, short len);
 void capturePiece(short index, short pieceId);
+void playerAction(short diceVal, short index);
 void movePlayer(short diceVal, short index);
 void approchToHome(short diceVal, short index, short pieceId);
 void baseToStart(short playerIndex);

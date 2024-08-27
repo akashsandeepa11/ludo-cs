@@ -2,6 +2,7 @@
     #include <stdlib.h>
     #include <time.h>
     #include <stdbool.h>
+    #include "player_behaviour.c"
     #include "types.h"
 
     #define BASE -1
@@ -134,10 +135,13 @@
                         players[i].p[j].homeStraightDis=51;
                         players[i].boardPiecesCount--;
 
-                        printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n", 
+                        printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n\n", 
                             players[i].playerName,
                             players[i].boardPiecesCount,
                             4-players[i].boardPiecesCount);
+
+
+                        playerAction(rollDice(players[index].playerName), index);
                         
                         break;
                     }
@@ -330,9 +334,10 @@
     }
 
     void playerAction(short diceVal, short index){
-
-        if(diceVal==6 && 
-        (players[index].boardPiecesCount + players[index].winPiecesCount) < 4 ){
+            
+        if(diceVal == 6 && 
+            (players[index].boardPiecesCount + players[index].winPiecesCount) < 4 &&
+            players[index].winPiecesCount < 4){
 
             baseToStart(index);
             return;
@@ -344,7 +349,8 @@
             movePlayer(diceVal, index);
 
         }
-
+            
+        printf("\n");
     }
 
     void iterateTheGame(){
@@ -354,12 +360,15 @@
         while(1){
             short diceVal;
             short isSixCount=3;
+            
             do{
                 if(players[j].winPiecesCount<4){    
+                    
                     diceVal = rollDice(players[j].playerName);
+
                     playerAction(diceVal, j);
+                    
                     isSixCount--;
-                    printf("\n");
                 }
             }while(diceVal==6 && isSixCount>0 && players[j].winPiecesCount < 4);
 
