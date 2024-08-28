@@ -30,19 +30,30 @@ void bluePlayer(short diceVal){
 
 void redPlayer(short diceVal){
 
-    short capturePieces[4] = {-1, -1, -1, -1};
-    short lastVal=0; 
+    short capturingPieces[4] = {-1, -1, -1, -1};
+    short beingCapture[4][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
+    short lastVal=-1; 
 
-    // Determine are there any pieces to capture and store their indexes to capturePieces arrey 
-    for(short pieceId=0; pieceId<4; pieceId++){
+    if(diceVal == 6 && 
+        (players[RED].boardPiecesCount + players[RED].winPiecesCount) < 2){
+
+        baseToStart(RED);
+        return;
+    }
+
+    // Determine are there any pieces to capture and store their indexes to capturePieces array 
+    for(short pieceId=0; pieceId < 4; pieceId++){
+
         
         if(players[RED].p[pieceId].location != -1 &&
-            players[RED].p[pieceId].distance < players[RED].p[pieceId].homeStraightDis &&
+            players[RED].p[pieceId].distance + diceVal < players[RED].p[pieceId].homeStraightDis &&
             !isSpecialLocation(players[RED].p[pieceId].location+diceVal, specialLocations, 8)){
             
-            short newLocation; 
+            short newLocation = players[RED].p[pieceId].location; 
             
-            updatedLocation(&newLocation ,RED, pieceId, diceVal);
+            updateLocation(&newLocation, RED, pieceId, diceVal);
+
+            printf("---------------New Loc: %d\n", newLocation);
 
             for(short opPlayer=0; opPlayer<4; opPlayer++){
                 
@@ -54,7 +65,11 @@ void redPlayer(short diceVal){
 
                             if(newLocation == players[opPlayer].p[opPiece].location){
                                 
-                                capturePieces[lastVal++]=pieceId;
+                                capturingPieces[++lastVal]=pieceId;
+                                beingCapture[lastVal][0]=opPlayer;
+                                beingCapture[lastVal][1]=opPiece;
+
+                                printf("----------------Being capture %s  %d\n", players[opPlayer].p[opPiece].pieceName, players[opPlayer].p[opPiece].location);
                             
                             } 
 
@@ -66,28 +81,46 @@ void redPlayer(short diceVal){
         }
     }
 
-    // Identify what is the closest piece to Its's home
-    short pieceCloseHome = capturePieces[0];
+    short indexOfPieceCloseToHome = 0;
 
-    if(lastVal > 1){
+    if(lastVal != -1){
          
-        for(short i=1; i<lastVal; i++){
+        // Identify what is the closest piece to Its's home
+        for(short i=1; i < lastVal+1; i++){
 
-            // if((players[])){
+            if((players[beingCapture[i][0]].p[beingCapture[i][1]].homeStraightDis - players[beingCapture[i][0]].p[beingCapture[i][1]].distance) < 
+                (players[beingCapture[i-1][0]].p[beingCapture[i-1][1]].homeStraightDis - players[beingCapture[i-1][0]].p[beingCapture[i-1][1]].distance)){
 
-            //     // pieceCloseHome = capturePieces[i];
+                indexOfPieceCloseToHome = i;
 
-            // }else{
-
-            // }
-
-                printf("#######################capture players\n %s ##########################", players[RED].p[pieceCloseHome].pieceName);
+            }
         }
-    }
 
+        movePlayer1(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
+
+        capturePiece(RED, capturingPieces[indexOfPieceCloseToHome], 
+            beingCapture[indexOfPieceCloseToHome][0],
+            beingCapture[indexOfPieceCloseToHome][1]);
+
+        return;
+
+    }else if(players[RED].boardPiecesCount > 0){
+
+        movePlayer(diceVal, RED);
+        return;
+    }    
+
+        
+
+    if(diceVal == 6 && 
+        (players[RED].boardPiecesCount + players[RED].winPiecesCount) < 4 &&
+        players[RED].winPiecesCount < 4){
+
+        baseToStart(RED);
+        return;
+
+    }    
     
-    
-    return;
 }
 
 void greenPlayer(short diceVal){
@@ -100,10 +133,10 @@ void baseToStart(short playerIndex){
     for(short i=0; i<4; i++){
         
         if(players[playerIndex].p[i].location==-1){
-                
+
             players[playerIndex].boardPiecesCount++;
             players[playerIndex].p[i].distance=0;
-            players[playerIndex].p[i].location = 2 + (13*(players[playerIndex].index));   
+            players[playerIndex].p[i].location = 2 + (13*(playerIndex));   
 
             // printf("Location: L%d", players[playerIndex].p[i].location);
             printf("%s player moves piece %s to the starting point L%d.\n", players[playerIndex].playerName, 
@@ -122,21 +155,6 @@ void baseToStart(short playerIndex){
     }
 }
 
-short updatedLocation(short *locVariable, short playerID, short pieceId, short diceVal){
 
-    if (players[playerID].p[pieceId].isClockwise) {
-        // Move clockwise
-        *locVariable = (*locVariable + diceVal) % 52;
-    } else {
-        // Move counterclockwise
-        *locVariable -= diceVal;
-
-        if (*locVariable < 0) {
-            *locVariable = 52 + *locVariable;
-        }
-    }
-
-    return *locVariable;
-}
 
 
