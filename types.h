@@ -22,6 +22,7 @@ struct player {
 
 short rollDice(char *name);
 bool tossCoin(short playerId, short pieceId);
+short updatedLocation(short *locVariable, short playerID, short pieceId, short diceVal);
 short chooseFirstPlayer();
 bool isSpecialLocation(short location, short *locArr, short len);
 void capturePiece(short index, short pieceId);

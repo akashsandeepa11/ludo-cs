@@ -10,7 +10,6 @@
     #define HOMEPATH 5
     #define HOME(playerId, pieceId) (players[playerId].p[pieceId].homeStraightDis + HOMEPATH)
 
-
     struct player players[] = {
         {0, "Yellow", 0, 0, {{0, -1, -1, 51, 0, true, "Y1"}, {1, -1, -1, 51, 0, true, "Y2"}, {2, -1, -1, 51, 0, true, "Y3"}, {3, -1, -1, 51, 0, true, "Y4"}}},
         {1, "Blue", 0, 0, {{0, -1, -1, 51, 0, true, "B1"}, {1, -1, -1, 51, 0, true, "B2"}, {2, -1, -1, 51, 0, true, "B3"}, {3, -1, -1, 51, 0, true, "B4"}}},
@@ -19,6 +18,7 @@
         
     short winners[4]={-1, -1, -1, -1};   
 
+    short specialLocations[] = {0, 2, 13, 15, 26, 28, 39, 41};
 
     short rollDice(char *name) {
     
@@ -110,69 +110,128 @@
         return false;
     }
 
-    void capturePiece(short index, short pieceId){
-        short specialLocations[] = {0, 2, 13, 15, 26, 28, 39, 41};
+void capturePiece(short index, short pieceId){
         
-        for(short i=0; i<4; i++){
-            if(index!=i){
-                for(short j=0; j<4; j++){
-                    if(players[index].p[pieceId].location == players[i].p[j].location && 
-                        players[i].p[j].distance < players[i].p[j].homeStraightDis &&
-                        !isSpecialLocation(players[index].p[pieceId].location, specialLocations, 8)){
+    for(short i=0; i<4; i++){
+        if(index!=i){
+            for(short j=0; j<4; j++){
 
-                        printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
-                            players[index].playerName,
-                            players[index].p[pieceId].pieceName,
-                            players[index].p[pieceId].location,
-                            players[i].playerName,
-                            players[i].p[j].pieceName);
-                        
-                        players[index].p[pieceId].capCount++;
-                        
-                        players[i].p[j].distance=-1;
-                        players[i].p[j].location=-1;
-                        players[i].p[j].capCount=0;
-                        players[i].p[j].homeStraightDis=51;
-                        players[i].boardPiecesCount--;
+                if(players[index].p[pieceId].location == players[i].p[j].location && 
+                    players[i].p[j].distance < players[i].p[j].homeStraightDis &&
+                    !isSpecialLocation(players[index].p[pieceId].location, specialLocations, 8)){
 
-                        printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n\n", 
-                            players[i].playerName,
-                            players[i].boardPiecesCount,
-                            4-players[i].boardPiecesCount);
+                    printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
+                        players[index].playerName,
+                        players[index].p[pieceId].pieceName,
+                        players[index].p[pieceId].location,
+                        players[i].playerName,
+                        players[i].p[j].pieceName);
+                                    
+                    players[index].p[pieceId].capCount++;
+                                
+                    players[i].p[j].location=-1;
+                    players[i].p[j].capCount=0;
+                    players[i].p[j].homeStraightDis=51;
+                    players[i].boardPiecesCount--;
+
+                    printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n\n", 
+                        players[i].playerName,
+                        players[i].boardPiecesCount,
+                        4-players[i].boardPiecesCount);
 
 
-                        playerAction(rollDice(players[index].playerName), index);
-                        
-                        break;
-                    }
-                } 
+                    playerAction(rollDice(players[index].playerName), index);
+                                    
+                }
+
+                break;
             }
-        }   
+        } 
     }
+}   
+    
 
-    void updateLocation(short index, short i, short diceVal) {
-        
-        if (players[index].p[i].isClockwise) {
-            // Move clockwise
-            players[index].p[i].location = (players[index].p[i].location + diceVal) % 52;
-        } else {
-            // Move counterclockwise
-            players[index].p[i].location -= diceVal;
-        
-            if (players[index].p[i].location < 0) {
-                players[index].p[i].location = 51 + (players[index].p[i].location + 1);
-            }
-        }
+void updateLocationAndDistance(short index, short i, short diceVal) {
 
-        if(players[index].p[i].capCount ==  0 &&
-            players[index].p[i].distance >= players[index].p[i].homeStraightDis){
+    updatedLocation(&players[index].p[i].location, index, i, diceVal);
 
-            players[index].p[i].homeStraightDis = players[index].p[i].homeStraightDis + 52;
+    if(players[index].p[i].capCount ==  0 &&
+        players[index].p[i].distance >= players[index].p[i].homeStraightDis){
+
+        players[index].p[i].homeStraightDis = players[index].p[i].homeStraightDis + 52;
+    }
             
+}
+
+void approchToHome(short diceVal, short index, short pieceId){
+
+    if(HOME(index, pieceId) - players[index].p[pieceId].distance == diceVal){
+        players[index].p[pieceId].location+=diceVal;
+        players[index].p[pieceId].distance+=diceVal;
+
+        winPlayer(index, pieceId);
+
+    }           
+    
+}
+
+void winPlayer(short index, short i){
+    if(players[index].p[i].distance >= HOME(index, i)){
+        players[index].winPiecesCount++;
+        players[index].boardPiecesCount--;
+        printf(">> %s piece reached to the Home . <<\n", players[index].p[i].pieceName);
+
+        if(players[index].winPiecesCount>=4){
+
+            printf(">>>>> %s player's all pieces Reached to the Home!!!. <<<<<\n", players[index].playerName);
+            for(short i=0; i<4; i++){
+                if(winners[i]==-1){
+                    winners[i]=index;
+                    break;
+                }
+            }
+
         }
+
     }
 
-    void movePlayer(short diceVal, short index){
+    //Stop iterating after winned 3rd player
+    if(winners[2] != -1){
+        bool isFouthPlayer=false;
+        for(short a=0; a<4; a++){
+            for(short b=0; b<3; b++){
+                if(winners[b]==a){
+                    isFouthPlayer=true;
+                    break;
+                }
+            }
+            if(!isFouthPlayer){
+                winners[3]=a;
+                break;
+            }
+            isFouthPlayer=false;
+        }
+    }
+}
+
+void movePlayer(short diceVal, short index){
+
+        // if(diceVal == 6 && 
+        //     (players[index].boardPiecesCount + players[index].winPiecesCount) < 4 &&
+        //     players[index].winPiecesCount < 4){
+
+        //     baseToStart(index);
+        //     return;
+
+        // }
+
+        // if(players[index].boardPiecesCount <= 0 ){
+        //     return;
+        // }
+            
+        // printf("\n");
+        //-----------------
+
 
         bool isOnBoard=false;
 
@@ -195,7 +254,8 @@
                 short tmpLoc=players[index].p[i].location;
 
                 players[index].p[i].distance+=diceVal;
-                updateLocation(index, i, diceVal);
+
+                updateLocationAndDistance(index, i, diceVal);
                 
                 if(players[index].p[i].distance < players[index].p[i].homeStraightDis){
 
@@ -258,83 +318,25 @@
         
     }
 
-    void approchToHome(short diceVal, short index, short pieceId){
-
-        if(HOME(index, pieceId) - players[index].p[pieceId].distance == diceVal){
-            players[index].p[pieceId].location+=diceVal;
-            players[index].p[pieceId].distance+=diceVal;
-            winPlayer(index, pieceId);
-        }           
-    
-    }
-
-    void baseToStart(short playerIndex){
-
-        for(short i=0; i<4; i++){
-            if(players[playerIndex].p[i].location==-1){
-                
-                players[playerIndex].boardPiecesCount++;
-                players[playerIndex].p[i].distance=0;
-                players[playerIndex].p[i].location = 2 + (13*(players[playerIndex].index));   
-
-                    // printf("Location: L%d", players[playerIndex].p[i].location);
-                printf("%s player moves piece %s to the starting point L%d.\n", players[playerIndex].playerName, 
-                    players[playerIndex].p[i].pieceName, 
-                    players[playerIndex].p[i].location);
-
-                tossCoin(playerIndex, i);
-
-                printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n", 
-                    players[playerIndex].playerName,
-                    players[playerIndex].boardPiecesCount + players[playerIndex].winPiecesCount,
-                    4 - (players[playerIndex].boardPiecesCount + players[playerIndex].winPiecesCount));
-
-                break;
-            }
-        }
-    }
-
-    void winPlayer(short index, short i){
-        if(players[index].p[i].distance >= HOME(index, i)){
-            players[index].winPiecesCount++;
-            players[index].boardPiecesCount--;
-            printf(">> %s piece reached to the Home . <<\n", players[index].p[i].pieceName);
-
-            if(players[index].winPiecesCount>=4){
-
-                printf(">>>>> %s player's all pieces Reached to the Home!!!. <<<<<\n", players[index].playerName);
-                for(short i=0; i<4; i++){
-                    if(winners[i]==-1){
-                        winners[i]=index;
-                        break;
-                    }
-                }
-
-            }
-
-        }
-
-        //Stop iterating after winned 3rd player
-        if(winners[2] != -1){
-            bool isFouthPlayer=false;
-            for(short a=0; a<4; a++){
-                for(short b=0; b<3; b++){
-                    if(winners[b]==a){
-                        isFouthPlayer=true;
-                        break;
-                    }
-                }
-                if(!isFouthPlayer){
-                    winners[3]=a;
-                    break;
-                }
-                isFouthPlayer=false;
-            }
-        }
-    }
-
     void playerAction(short diceVal, short index){
             
+        // switch(index){
+        //     case 2:
+                
+        //         redPlayer(diceVal);
+        //         return;
+                // break;
+            // case 1:
+            //     bluePlayer(diceVal);
+                // break;
+            // case 2:
+            //     redPlayer(diceVal);
+                // break;
+            // case 3:
+            //     greenPlayer(diceVal);
+                // break;
+        // }
+
         if(diceVal == 6 && 
             (players[index].boardPiecesCount + players[index].winPiecesCount) < 4 &&
             players[index].winPiecesCount < 4){
