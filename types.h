@@ -18,7 +18,6 @@ struct player {
     struct piece p[4];
 };
 
-
 // in player_behaviour.c Function prototypes
 void yellowPlayer(short diceVal);
 void bluePlayer(short diceVal);

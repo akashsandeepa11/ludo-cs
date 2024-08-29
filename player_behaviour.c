@@ -5,16 +5,20 @@
 #define RED 2
 #define GREEN 3
 
+#define BASE -1
+#define STARTPOINT 0
+#define HOMEPATH 5
+#define HOME(playerId, pieceId) (players[playerId].p[pieceId].homeStraightDis + HOMEPATH)
 
-    #define BASE -1
-    #define STARTPOINT 0
-    #define HOMEPATH 5
-    #define HOME(playerId, pieceId) (players[playerId].p[pieceId].homeStraightDis + HOMEPATH)
-
-
+#define BAWANA 9
+#define KOTUWA 27
+#define PITAKOTUWA 46
 
 extern struct player players[];  
 extern short specialLocations[];
+
+extern short roundCounter;
+extern short mysteryCell;
 
 void yellowPlayer(short diceVal){
     
@@ -53,8 +57,6 @@ void redPlayer(short diceVal){
             
             updateLocation(&newLocation, RED, pieceId, diceVal);
 
-            printf("---------------New Loc: %d\n", newLocation);
-
             for(short opPlayer=0; opPlayer<4; opPlayer++){
                 
                 if(opPlayer != RED){
@@ -69,8 +71,6 @@ void redPlayer(short diceVal){
                                 beingCapture[lastVal][0]=opPlayer;
                                 beingCapture[lastVal][1]=opPiece;
 
-                                printf("----------------Being capture %s  %d\n", players[opPlayer].p[opPiece].pieceName, players[opPlayer].p[opPiece].location);
-                            
                             } 
 
                         }
@@ -95,6 +95,7 @@ void redPlayer(short diceVal){
 
             }
         }
+
 
         movePlayer1(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
 
@@ -155,6 +156,27 @@ void baseToStart(short playerIndex){
     }
 }
 
+void checkForMysteryCell(){
+    
+}
+
+void createMysteryCell(){
+        
+    short tmpCellNum;
+    
+    do{
+        
+        tmpCellNum = rand() % 52;
+
+    }while( tmpCellNum == mysteryCell );
+
+    mysteryCell = tmpCellNum;
+
+    printf("\033[35m");  
+    printf("+-------------------------------------------------------------+\n");
+    printf("| A Mystery Cell has appeared at cell number %2d on the board! |\n", mysteryCell);
+    printf("+-------------------------------------------------------------+\033[0m\n");
+}
 
 
 
