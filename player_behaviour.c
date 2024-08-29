@@ -47,7 +47,6 @@ void redPlayer(short diceVal){
 
     // Determine are there any pieces to capture and store their indexes to capturePieces array 
     for(short pieceId=0; pieceId < 4; pieceId++){
-
         
         if(players[RED].p[pieceId].location != -1 &&
             players[RED].p[pieceId].distance + diceVal < players[RED].p[pieceId].homeStraightDis &&
@@ -96,7 +95,6 @@ void redPlayer(short diceVal){
             }
         }
 
-
         movePlayer1(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
 
         capturePiece(RED, capturingPieces[indexOfPieceCloseToHome], 
@@ -108,6 +106,7 @@ void redPlayer(short diceVal){
     }else if(players[RED].boardPiecesCount > 0){
 
         movePlayer(diceVal, RED);
+        checkForMysteryCell();
         return;
     }    
 
@@ -157,25 +156,34 @@ void baseToStart(short playerIndex){
 }
 
 void checkForMysteryCell(){
-    
+    // if(mysteryCell == players[])
 }
 
 void createMysteryCell(){
         
     short tmpCellNum;
-    
+    bool isOnPiece=false;
+
     do{
-        
+        isOnPiece = false;
+
         tmpCellNum = rand() % 52;
 
-    }while( tmpCellNum == mysteryCell );
+        for(short i = 0; i<3; i++){
+            for(short j = 0; j < 3; j++){
+                if(players[i].p[j].location == tmpCellNum){
+                    isOnPiece=true;
+                    break;
+                    break;
+                }
+            }
+        }
+
+    }while( tmpCellNum == mysteryCell && isOnPiece);
 
     mysteryCell = tmpCellNum;
 
-    printf("\033[35m");  
-    printf("+-------------------------------------------------------------+\n");
-    printf("| A Mystery Cell has appeared at cell number %2d on the board! |\n", mysteryCell);
-    printf("+-------------------------------------------------------------+\033[0m\n");
+    printf("\033[35mA mystery cell has spawned in Location L%d and will be at this location for next four rounds.\033[0m\n\n", mysteryCell);
 }
 
 

@@ -281,11 +281,20 @@ void movePlayer1(short playerId, short pieceId, short diceVal){
             return;
         }
                                
-        printf("%s moves piece %s from L%d to Home Staight and %d cells far from home.\n", 
+        printf("%s moves piece %s from L%d to %s homepath %d by %d units %s direction.\n", 
             players[playerId].playerName, 
             players[playerId].p[pieceId].pieceName, 
             tmpLoc,
-            HOME(playerId, pieceId) - players[playerId].p[pieceId].distance);
+            players[playerId].playerName,
+            players[playerId].p[pieceId].distance - players[playerId].p[pieceId].homeStraightDis,
+            diceVal,
+            players[playerId].p[pieceId].isClockwise? "Clockwise" : "Counter-Clockwise"
+            );
+        // printf("%s moves piece %s from L%d to Home Staight and %d cells far from home.\n", 
+        //     players[playerId].playerName, 
+        //     players[playerId].p[pieceId].pieceName, 
+        //     tmpLoc,
+        //     HOME(playerId, pieceId) - players[playerId].p[pieceId].distance);
 
         return;
     }
@@ -442,8 +451,9 @@ void printPieceStates() {
             } else if (players[k].p[i].distance >= players[k].p[i].homeStraightDis && 
                        players[k].p[i].distance < HOME(k, i) && 
                        players[k].p[i].capCount > 0) {
-                printf("%d cells to reach home. cap:%d dis:%d home:%d c:%d", 
-                       HOME(k, i) - players[k].p[i].distance, 
+                printf("%s homepath %d. cap:%d dis:%d home:%d c:%d", 
+                       players[k].playerName,
+                       players[k].p[i].distance - players[k].p[i].homeStraightDis, 
                        players[k].p[i].capCount, 
                        players[k].p[i].distance,
                        players[k].p[i].homeStraightDis,
@@ -474,6 +484,14 @@ void printPieceStates() {
         // Reset color to default after each player's output
         printf("\033[0m");
     }
+
+    if(mysteryCell != -1 && ((roundCounter % 16) / 4) != 1 ){        
+        
+        printf("The mystery cell is at L%d and will be at that location for the next %d rounds\n", mysteryCell, 
+            (((roundCounter % 16) / 4) == 0) ? 1 : (((roundCounter % 16) / 4) == 1) ? 0 : (((roundCounter % 16) / 4) == 2) ? 3 : 2);
+            
+    }
+
     printf("\n");
 }
 
