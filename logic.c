@@ -461,8 +461,11 @@ void iterateTheGame(){
         short diceVal;
         short isSixCount=3;
     
-        roundCounter++;
+        // For Kotuwa function
+        short isThreeCount=3;
         
+        roundCounter++;
+
         // mystery cell apear function call start
         if(roundCounter == 9 ){
             
@@ -486,6 +489,10 @@ void iterateTheGame(){
                 printf("\n");
 
                 isSixCount--;
+
+                if(diceVal==3){
+                    isThreeCount--;
+                } 
             }
         }while(diceVal==6 && isSixCount>0 && players[playerId].winPiecesCount < 4);
 
@@ -509,12 +516,19 @@ void iterateTheGame(){
 
                         players[plId].p[pcId].mysteryData.counter--;
 
-
-
+                        // If player had been teleported to the bawana after 4 rounds, stop thw power
                         if(players[plId].p[pcId].mysteryData.counter == -1){
                             
                             players[plId].p[pcId].mysteryData.isEnergised == -1;
                         }
+
+                        // check if player had teleported to the kotuwa
+                        if(players[plId].p[pcId].mysteryData.counter == 0 && players[plId].p[pcId].mysteryData.isEnergised == -1 && isThreeCount==0){
+                            
+                            printf("The %s piece %s is movement-restricted and has rolled three consecutively.\n");
+                            
+                            toBase(plId, pcId);
+                        }    
                     }
                 }    
             }

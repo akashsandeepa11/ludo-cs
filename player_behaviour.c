@@ -309,22 +309,22 @@ void createMysteryCell(){
 
 void toBawana(short playerId, short pieceId){
     printf("%s piece %s teleported to Bhawana\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
-    printf("###############################################################################################################################\n");
+    // printf("###############################################################################################################################\n");
     if(rand() % 2){
         
-        printf("%s piece %s feels energized, and movement speed doubles.\n\n");
+        printf("%s piece %s feels energized, and movement speed doubles.\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         players[playerId].p[pieceId].mysteryData.counter=3;
         players[playerId].p[pieceId].mysteryData.isEnergised=1;
     }else{
         
-        printf("%s piece %s feels sick, and movement speed halves.\n\n");
+        printf("%s piece %s feels sick, and movement speed halves.\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         players[playerId].p[pieceId].mysteryData.counter=3;
         players[playerId].p[pieceId].mysteryData.isEnergised=0;
     }
 }
 
 void toKotuwa(short playerId, short pieceId){
-    printf("###############################################################################################################################\n");
+    // printf-n");
     printf("%s piece %s teleported to Kotuwa\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     players[playerId].p[pieceId].mysteryData.counter=3;
@@ -336,9 +336,9 @@ void toPitaKotuwa(short playerId, short pieceId){
 
     if(players[playerId].p[pieceId].isClockwise){
         players[playerId].p[pieceId].isClockwise=!players[playerId].p[pieceId].isClockwise;
-        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n\n");
+        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
     }else{
-        printf("The %s piece %s is moving in a counter-clockwise direction. Teleporting to Kotuwa from Pita-Kotuwa\n");
+        printf("The %s piece %s is moving in a counter-clockwise direction. Teleporting to Kotuwa from Pita-Kotuwa\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         toKotuwa(playerId, pieceId);
     }
 }
