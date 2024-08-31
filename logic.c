@@ -174,7 +174,8 @@
 void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId){
     
     if(!isSpecialLocation(players[playerId].p[pieceId].location, specialLocations, 8) &&
-        players[playerId].p[pieceId].location == players[opPlayerId].p[opPieceId].location){   
+        players[playerId].p[pieceId].location == players[opPlayerId].p[opPieceId].location &&
+        players[opPlayerId].p[pieceId].distance < players[opPlayerId].p[pieceId].homeStraightDis){   
 
         printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
             players[playerId].playerName,
@@ -352,7 +353,7 @@ void movePlayerDirectly(short playerId, short pieceId, short diceVal){
             players[playerId].p[pieceId].isClockwise? "Clockwise" : "Counter-Clockwise"
             );
 
-
+        checkForMysteryCell(playerId, pieceId);
         // createBlock(playerId, pieceId);
 
         return;

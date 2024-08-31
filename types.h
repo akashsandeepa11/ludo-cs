@@ -26,6 +26,12 @@ void redPlayer(short diceVal);
 void greenPlayer(short diceVal);
 void baseToStart(short playerIndex);
 void createBlock(short playerId, short pieceId);
+void toBawana(short playerId, short pieceId);
+void toKotuwa(short playerId, short pieceId);
+void toPitaKotuwa(short playerId, short pieceId);
+void toBase(short playerId, short pieceId);
+void toX(short playerId, short pieceId);
+void toApproach(short playerId, short pieceId);
 
 // in logic.c Function prototypes
 short rollDice(char *name);

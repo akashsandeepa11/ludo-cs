@@ -6,9 +6,10 @@
 #define GREEN 3
 
 #define BASE -1
-#define STARTPOINT 0
 #define HOMEPATH 5
 #define HOME(playerId, pieceId) (players[playerId].p[pieceId].homeStraightDis + HOMEPATH)
+#define STARTPOINT(playerId) (2 + (13 * (playerId)))
+#define APROACH(playerId) (13 * (playerId))
 
 #define BAWANA 9
 #define KOTUWA 27
@@ -48,34 +49,34 @@ void yellowPlayer(short diceVal){
             }
         }            
     }
-
-    //check piece that close to its home
-    short idCloseToHome = 0;
-
-    for(short i=1; i < 4; i++){
-
-        if(players[YELLOW].p[i].location != -1 && 
-            players[YELLOW].p[i].distance < HOME(YELLOW, i) &&
-            players[YELLOW].p[idCloseToHome].location != -1 && 
-            players[YELLOW].p[idCloseToHome].distance < HOME(YELLOW, idCloseToHome)){
-
-            if((HOME(YELLOW, i) - players[YELLOW].p[i].distance) < (HOME(YELLOW, idCloseToHome) - players[YELLOW].p[idCloseToHome].distance)){
-
-                idCloseToHome = i;
-            }
-        }
-    }
-
-
-    // movePlayerDirectly(YELLOW, idCloseToHome, diceVal);
-    // capturePieceByPlayerId(YELLOW, idCloseToHome);
-
+    
     movePlayer(diceVal, YELLOW);
     return;
 }
 
 void bluePlayer(short diceVal){
 
+    // check mystery cell
+    for(short pieceId = 0; pieceId < 4; pieceId++){
+        
+        if(players[BLUE].p[pieceId].location != -1 &&
+            players[BLUE].p[pieceId].distance + diceVal < players[BLUE].p[pieceId].homeStraightDis){
+
+                short newLocation = players[BLUE].p[pieceId].location; 
+                
+                updateLocation(&newLocation, BLUE, pieceId, diceVal);
+
+                if(newLocation == mysteryCell){
+                    
+                    movePlayerDirectly(BLUE, pieceId, diceVal);
+                    capturePieceByPlayerId(BLUE, pieceId);
+                    return;
+                }
+        }
+    }
+
+    movePlayer(diceVal, BLUE);
+    
     return;
 }
 
@@ -226,7 +227,7 @@ void baseToStart(short playerIndex){
 
             players[playerIndex].boardPiecesCount++;
             players[playerIndex].p[i].distance=0;
-            players[playerIndex].p[i].location = 2 + (13*(playerIndex));   
+            players[playerIndex].p[i].location = STARTPOINT(playerIndex);   
 
             // printf("Location: L%d", players[playerIndex].p[i].location);
             printf("%s player moves piece %s to the starting point L%d.\n", players[playerIndex].playerName, 
@@ -245,9 +246,36 @@ void baseToStart(short playerIndex){
     }
 }
 
-// void checkForMysteryCell(){
-    // if(mysteryCell == players[])
-// }
+void checkForMysteryCell(short playerId, short pieceId){
+    
+    if(mysteryCell == players[playerId].p[pieceId].location){
+
+        printf("####################################################################################################################################################");
+
+        short rnd=(rand() % 6);
+
+        switch (rnd){
+        case 0:
+            toApproach(playerId, pieceId);
+            break;
+        case 1:
+            toBase(playerId, pieceId);
+            break;
+        case 2:
+            toBawana(playerId, pieceId);
+            break;
+        case 3:
+            toKotuwa(playerId, pieceId);
+            break;
+        case 4:
+            toPitaKotuwa(playerId, pieceId);
+            break;
+        case 5:
+            toX(playerId, pieceId);
+            break;
+        }
+    };
+}
 
 void createMysteryCell(){
         
@@ -276,6 +304,47 @@ void createMysteryCell(){
     printf("\033[35mA mystery cell has spawned in Location L%d and will be at this location for next four rounds.\033[0m\n\n", mysteryCell);
 }
 
+void toBawana(short playerId, short pieceId){
+    printf("%s piece %s teleported to Bhawana\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+}
+
+void toKotuwa(short playerId, short pieceId){
+    printf("%s piece %s teleported to Kotuwa\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+}
+
+void toPitaKotuwa(short playerId, short pieceId){
+    printf("%s piece %s teleported to Pita-Kotuwa\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+
+    if(players[playerId].p[pieceId].isClockwise){
+        players[playerId].p[pieceId].isClockwise=!players[playerId].p[pieceId].isClockwise;
+        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n");
+    }else{
+        toKotuwa(playerId, pieceId);
+        printf("The %s piece %s is moving in a counter-clockwise direction. Teleporting to Kotuwa from Pita-Kotuwa\n");
+    }
+}
+
+void toBase(short playerId, short pieceId){
+    printf("%s piece %s teleported to Base\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+
+    players[playerId].p[pieceId].location=-1;
+    players[playerId].p[pieceId].distance=-1;
+    players[playerId].p[pieceId].capCount=0;
+    players[playerId].p[pieceId].homeStraightDis=51;
+    players[playerId].boardPiecesCount--;
+}
+
+void toX(short playerId, short pieceId){
+    printf("%s piece %s teleported to X\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+
+    players[playerId].p[pieceId].location=STARTPOINT(playerId);
+}
+
+void toApproach(short playerId, short pieceId){
+    printf("%s piece %s teleported to Approach\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+
+    players[playerId].p[pieceId].location=APROACH(playerId);
+}
 
 // void createBlock(short playerId, short pieceId){
     
