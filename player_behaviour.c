@@ -22,12 +22,113 @@ extern short mysteryCell;
 
 void yellowPlayer(short diceVal){
     
+    if(diceVal == 6 && 
+        (players[YELLOW].boardPiecesCount + players[YELLOW].winPiecesCount) < 4 &&
+        players[YELLOW].winPiecesCount < 4){
+
+        baseToStart(YELLOW);
+        return;
+    } 
 
 
+    if((players[YELLOW].boardPiecesCount + players[YELLOW].winPiecesCount) >= 4
+        || (players[YELLOW].boardPiecesCount + players[YELLOW].winPiecesCount) < 4 && diceVal != 6){
+        
+        // check are there any piece that havent capture any piece
+        for(short pieceId=0; pieceId<4; pieceId++){
+
+            if(players[YELLOW].p[pieceId].capCount == 0 && 
+                players[YELLOW].p[pieceId].location != -1 && 
+                players[YELLOW].p[pieceId].distance < players[YELLOW].p[pieceId].homeStraightDis){
+
+                if(captureIfAvailable(YELLOW, pieceId, diceVal, true)){
+                    captureIfAvailable(YELLOW, pieceId, diceVal, false);
+                    return;
+                }                
+            }
+        }            
+    }
+
+    //check piece that close to its home
+    short idCloseToHome = 0;
+
+    for(short i=1; i < 4; i++){
+
+        if(players[YELLOW].p[i].location != -1 && 
+            players[YELLOW].p[i].distance < HOME(YELLOW, i) &&
+            players[YELLOW].p[idCloseToHome].location != -1 && 
+            players[YELLOW].p[idCloseToHome].distance < HOME(YELLOW, idCloseToHome)){
+
+            if((HOME(YELLOW, i) - players[YELLOW].p[i].distance) < (HOME(YELLOW, idCloseToHome) - players[YELLOW].p[idCloseToHome].distance)){
+
+                idCloseToHome = i;
+            }
+        }
+    }
+
+
+    // movePlayerDirectly(YELLOW, idCloseToHome, diceVal);
+    // capturePieceByPlayerId(YELLOW, idCloseToHome);
+
+    movePlayer(diceVal, YELLOW);
     return;
 }
 
 void bluePlayer(short diceVal){
+
+    return;
+}
+
+void greenPlayer(short diceVal){
+    
+    if(diceVal == 6 && 
+        (players[GREEN].boardPiecesCount + players[GREEN].winPiecesCount) <= 4 &&
+        players[GREEN].winPiecesCount <= 4){
+
+        baseToStart(GREEN);
+        return;
+    } 
+
+    // check are there any piece that havent capture any piece
+    for(short pieceId=0; pieceId<4; pieceId++){
+
+        if(players[GREEN].p[pieceId].capCount == 0 && 
+            players[GREEN].p[pieceId].location != -1 && 
+            players[GREEN].p[pieceId].distance < players[GREEN].p[pieceId].homeStraightDis){
+
+            if(captureIfAvailable(GREEN, pieceId, diceVal, true)){
+                captureIfAvailable(GREEN, pieceId, diceVal, false);
+                return;        
+            }
+        }
+    }
+
+    // check and move if there are any piece to create block
+    for(short pieceId = 0; pieceId < 4; pieceId++){
+        
+        if(players[GREEN].p[pieceId].location != -1 &&
+            players[GREEN].p[pieceId].distance + diceVal < players[GREEN].p[pieceId].homeStraightDis){
+
+                for(short j=0; j<4; j++){
+
+                    if(pieceId != j){
+
+                        short newLocation = players[GREEN].p[pieceId].location; 
+                        
+                        updateLocation(&newLocation, GREEN, pieceId, diceVal);
+
+                        if(newLocation == players[GREEN].p[j].location){
+                            
+                            movePlayerDirectly(GREEN, pieceId, diceVal);
+                            capturePieceByPlayerId(GREEN, pieceId);
+                            return;
+                        }
+                    }
+                }
+        }
+    }
+
+    movePlayer(diceVal, GREEN);
 
     return;
 }
@@ -38,19 +139,12 @@ void redPlayer(short diceVal){
     short beingCapture[4][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
     short lastVal=-1; 
 
-    if(diceVal == 6 && 
-        (players[RED].boardPiecesCount + players[RED].winPiecesCount) < 2){
-
-        baseToStart(RED);
-        return;
-    }
-
     // Determine are there any pieces to capture and store their indexes to capturePieces array 
     for(short pieceId=0; pieceId < 4; pieceId++){
         
         if(players[RED].p[pieceId].location != -1 &&
             players[RED].p[pieceId].distance + diceVal < players[RED].p[pieceId].homeStraightDis &&
-            !isSpecialLocation(players[RED].p[pieceId].location+diceVal, specialLocations, 8)){
+            !isSpecialLocation(players[RED].p[pieceId].location + diceVal, specialLocations, 8)){
             
             short newLocation = players[RED].p[pieceId].location; 
             
@@ -88,14 +182,14 @@ void redPlayer(short diceVal){
         for(short i=1; i < lastVal+1; i++){
 
             if((players[beingCapture[i][0]].p[beingCapture[i][1]].homeStraightDis - players[beingCapture[i][0]].p[beingCapture[i][1]].distance) < 
-                (players[beingCapture[i-1][0]].p[beingCapture[i-1][1]].homeStraightDis - players[beingCapture[i-1][0]].p[beingCapture[i-1][1]].distance)){
+                (players[beingCapture[indexOfPieceCloseToHome][0]].p[beingCapture[indexOfPieceCloseToHome][1]].homeStraightDis - players[beingCapture[indexOfPieceCloseToHome][0]].p[beingCapture[indexOfPieceCloseToHome][1]].distance)){
 
                 indexOfPieceCloseToHome = i;
 
             }
         }
 
-        movePlayer1(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
+        movePlayerDirectly(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
 
         capturePiece(RED, capturingPieces[indexOfPieceCloseToHome], 
             beingCapture[indexOfPieceCloseToHome][0],
@@ -106,7 +200,7 @@ void redPlayer(short diceVal){
     }else if(players[RED].boardPiecesCount > 0){
 
         movePlayer(diceVal, RED);
-        checkForMysteryCell();
+        // checkForMysteryCell();
         return;
     }    
 
@@ -123,10 +217,6 @@ void redPlayer(short diceVal){
     
 }
 
-void greenPlayer(short diceVal){
-
-    return;
-}
 
 void baseToStart(short playerIndex){
 
@@ -155,9 +245,9 @@ void baseToStart(short playerIndex){
     }
 }
 
-void checkForMysteryCell(){
+// void checkForMysteryCell(){
     // if(mysteryCell == players[])
-}
+// }
 
 void createMysteryCell(){
         
@@ -187,4 +277,49 @@ void createMysteryCell(){
 }
 
 
+// void createBlock(short playerId, short pieceId){
+    
+//     short counter=1;
 
+//     for(short i=0; i<4; i++){
+//         if(i != pieceId){
+
+//             if(players[playerId].p[pieceId].location == players[playerId].p[i].location){
+                
+//                 if(players[playerId].blocks[0][0] == -1){
+                    
+//                     players[playerId].blocks[0][0] = pieceId;
+//                     players[playerId].blocks[0][1] = i;
+        
+//                     break;
+//                 }else{
+
+//                     while(players[playerId].blocks[0][counter] != -1){
+
+//                         if(players[playerId].blocks[0][counter+1] == -1){
+
+//                             if(players[playerId].blocks[0][0] != i && players[playerId].blocks[0][1] != i && 
+//                                 players[playerId].blocks[0][2] != i && players[playerId].blocks[0][3] != i){
+                            
+//                                 players[playerId].blocks[0][counter+1] = i;
+//                                 break;
+//                             }
+//                         }
+//                         counter++;
+                    
+//                     }
+//                 }
+
+
+//                 printf("####################################################################################################################################################################################\n\n"); 
+//                 printf("%s player created block with ", players[playerId].playerName);
+
+//                 for(short i=0; i<3; i++){
+//                     printf(" %s,", players[playerId].p[players[playerId].blocks[0][i]].pieceName);
+//                 }
+//                 printf(".\n");
+//             }
+//         }
+//     }
+    
+// }

@@ -15,11 +15,64 @@
 #define PITAKOTUWA 46
 
     struct player players[] = {
-        {"Yellow", 0, 0, {{-1, -1, 51, 0, true, "Y1"}, {-1, -1, 51, 0, true, "Y2"}, {-1, -1, 51, 0, true, "Y3"}, {-1, -1, 51, 0, true, "Y4"}}},
-        {"Blue", 0, 0, {{-1, -1, 51, 0, true, "B1"}, {-1, -1, 51, 0, true, "B2"}, {-1, -1, 51, 0, true, "B3"}, {-1, -1, 51, 0, true, "B4"}}},
-        {"Red", 0, 0, {{-1, -1, 51, 0, true, "R1"}, {-1, -1, 51, 0, true, "R2"}, {-1, -1, 51, 0, true, "R3"}, {-1, -1, 51, 0, true, "R4"}}},
-        {"Green", 0, 0, {{-1, -1, 51, 0, true, "G1"}, {-1, -1, 51, 0, true, "G2"}, {-1, -1, 51, 0, true, "G3"}, {-1, -1, 51, 0, true, "G4"}}}};
-        
+        // Yellow Player
+        {
+            "Yellow", 0, 0,
+            {   // Blocks
+                {-1, -1, -1, -1}, 
+                {-1, -1, -1, -1}
+            }, 
+            {   // Pieces
+                {-1, -1, 51, 0, true, "Y1"}, 
+                {-1, -1, 51, 0, true, "Y2"}, 
+                {-1, -1, 51, 0, true, "Y3"}, 
+                {-1, -1, 51, 0, true, "Y4"}
+            }
+        },
+        // Blue Player
+        {
+            "Blue", 0, 0,
+            {   // Blocks
+                {-1, -1, -1, -1}, 
+                {-1, -1, -1, -1}
+            }, 
+            {   // Pieces
+                {-1, -1, 51, 0, true, "B1"}, 
+                {-1, -1, 51, 0, true, "B2"}, 
+                {-1, -1, 51, 0, true, "B3"}, 
+                {-1, -1, 51, 0, true, "B4"}
+            }
+        },
+        // Red Player
+        {
+            "Red", 0, 0,
+            {   // Blocks
+                {-1, -1, -1, -1}, 
+                {-1, -1, -1, -1}
+            }, 
+            {   // Pieces
+                {-1, -1, 51, 0, true, "R1"}, 
+                {-1, -1, 51, 0, true, "R2"}, 
+                {-1, -1, 51, 0, true, "R3"}, 
+                {-1, -1, 51, 0, true, "R4"}
+            }
+        },
+        // Green Player
+        {
+            "Green", 0, 0,
+            {   // Blocks
+                {-1, -1, -1, -1}, 
+                {-1, -1, -1, -1}
+            }, 
+            {   // Pieces
+                {-1, -1, 51, 0, true, "G1"}, 
+                {-1, -1, 51, 0, true, "G2"}, 
+                {-1, -1, 51, 0, true, "G3"}, 
+                {-1, -1, 51, 0, true, "G4"}
+            }
+        }
+    };
+    
     short winners[4]={-1, -1, -1, -1};   
 
     short specialLocations[] = {0, 2, 13, 15, 26, 28, 39, 41};
@@ -119,32 +172,67 @@
     }
 
 void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId){
+    
+    if(!isSpecialLocation(players[playerId].p[pieceId].location, specialLocations, 8) &&
+        players[playerId].p[pieceId].location == players[opPlayerId].p[opPieceId].location){   
 
-    printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
-        players[playerId].playerName,
-        players[playerId].p[pieceId].pieceName,
-        players[playerId].p[pieceId].location,
-        players[opPlayerId].playerName,
-        players[opPlayerId].p[opPieceId].pieceName);
+        printf("%s piece %s lands on square L%d, captures %s piece %s, and returns it to the base.\n", 
+            players[playerId].playerName,
+            players[playerId].p[pieceId].pieceName,
+            players[playerId].p[pieceId].location,
+            players[opPlayerId].playerName,
+            players[opPlayerId].p[opPieceId].pieceName);
+                        
+        players[playerId].p[pieceId].capCount++;
                     
-    players[playerId].p[pieceId].capCount++;
-                
-    players[opPlayerId].p[opPieceId].location=-1;
-    players[opPlayerId].p[opPieceId].distance=-1;
-    players[opPlayerId].p[opPieceId].capCount=0;
-    players[opPlayerId].p[opPieceId].homeStraightDis=51;
-    players[opPlayerId].boardPiecesCount--;
+        players[opPlayerId].p[opPieceId].location=-1;
+        players[opPlayerId].p[opPieceId].distance=-1;
+        players[opPlayerId].p[opPieceId].capCount=0;
+        players[opPlayerId].p[opPieceId].homeStraightDis=51;
+        players[opPlayerId].boardPiecesCount--;
 
-    printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n\n", 
-        players[opPlayerId].playerName,
-        players[opPlayerId].boardPiecesCount,
-        4-players[opPlayerId].boardPiecesCount);
+        printf("%s player now has %d/4 on pieces on the board and %d/4 pieces on the base.\n\n", 
+            players[opPlayerId].playerName,
+            players[opPlayerId].boardPiecesCount,
+            4-players[opPlayerId].boardPiecesCount);
 
 
-    playerAction(rollDice(players[playerId].playerName), playerId);
+        playerAction(rollDice(players[playerId].playerName), playerId);
+    }
 }
 
-void capturePieceWrap(short index, short pieceId){
+bool captureIfAvailable(short playerId, short pieceId, short diceVal, bool ischeck){
+
+    short newLoc = players[playerId].p[pieceId].location;
+    updateLocation(&newLoc, playerId, pieceId, diceVal);
+
+    if(players[playerId].p[pieceId].location != -1 &&
+        players[playerId].p[pieceId].distance + diceVal < players[playerId].p[pieceId].homeStraightDis &&
+        !isSpecialLocation(newLoc, specialLocations, 8)){
+        
+        for(short opPlayerId=0; opPlayerId<4; opPlayerId++){
+            
+            if(playerId != opPlayerId){
+                for(short opPieceId=0; opPieceId<4; opPieceId++){
+
+                        if(newLoc == players[opPlayerId].p[opPieceId].location){
+                            
+                            if(!ischeck){
+                                movePlayerDirectly(playerId, pieceId, diceVal);
+                                capturePiece(playerId, pieceId, opPlayerId, opPieceId);
+                            }
+                            return true;
+                        }
+                }
+                
+            }
+        }
+    }
+
+    return false;
+}
+
+void capturePieceByPlayerId(short index, short pieceId){
         
     for(short i=0; i<4; i++){
         if(index!=i){
@@ -242,7 +330,7 @@ void winPlayer(short index, short i){
     }
 }
 
-void movePlayer1(short playerId, short pieceId, short diceVal){
+void movePlayerDirectly(short playerId, short pieceId, short diceVal){
 
     short tmpLoc=players[playerId].p[pieceId].location;
 
@@ -263,6 +351,9 @@ void movePlayer1(short playerId, short pieceId, short diceVal){
             diceVal,
             players[playerId].p[pieceId].isClockwise? "Clockwise" : "Counter-Clockwise"
             );
+
+
+        // createBlock(playerId, pieceId);
 
         return;
 
@@ -290,11 +381,6 @@ void movePlayer1(short playerId, short pieceId, short diceVal){
             diceVal,
             players[playerId].p[pieceId].isClockwise? "Clockwise" : "Counter-Clockwise"
             );
-        // printf("%s moves piece %s from L%d to Home Staight and %d cells far from home.\n", 
-        //     players[playerId].playerName, 
-        //     players[playerId].p[pieceId].pieceName, 
-        //     tmpLoc,
-        //     HOME(playerId, pieceId) - players[playerId].p[pieceId].distance);
 
         return;
     }
@@ -331,8 +417,8 @@ void movePlayer(short diceVal, short index){
                 players[index].p[i].location != -1 && 
                 players[index].boardPiecesCount > 0){
                     
-                movePlayer1(index, i, diceVal);
-                capturePieceWrap(index, i);
+                movePlayerDirectly(index, i, diceVal);
+                capturePieceByPlayerId(index, i);
                 return;
                 
             }else if(players[index].p[i].distance < HOME(index, i) && 
@@ -353,80 +439,78 @@ void movePlayer(short diceVal, short index){
         
     }
 
-    void playerAction(short diceVal, short index){
-            
-        switch(index){
-            case 2:
-                
-                redPlayer(diceVal);
-                return;
-                // break;
-            // case 1:
-            //     bluePlayer(diceVal);
-                // break;
-            // case 2:
-            //     redPlayer(diceVal);
-                // break;
-            // case 3:
-            //     greenPlayer(diceVal);
-                // break;
-        }
-            
-        movePlayer(diceVal, index);
-
-    }
-
-    void iterateTheGame(){
-        short firstPlayer=chooseFirstPlayer(players);
-        short j=firstPlayer;
-
-        while(1){
-            short diceVal;
-            short isSixCount=3;
+void playerAction(short diceVal, short index){
         
-            roundCounter++;
+    switch(index){
+        // case BLUE:
+        //     bluePlayer(diceVal);
+            // return;
+        case RED:
+            redPlayer(diceVal);
+            return;
+        case GREEN:
+            greenPlayer(diceVal);
+            return;
+        case YELLOW:
+            yellowPlayer(diceVal);
+            return;
+    }
+        
+    movePlayer(diceVal, index);
+
+}
+
+void iterateTheGame(){
+    short firstPlayer=chooseFirstPlayer(players);
+    short j=firstPlayer;
+
+    while(1){
+        short diceVal;
+        short isSixCount=3;
+    
+        roundCounter++;
+        
+        // mystery cell apear function call start
+        if(roundCounter == 9 ){
             
-            // mystery cell apear function call start
-            if(roundCounter == 9 ){
+            createMysteryCell();
+
+        }else if((roundCounter - 5) % 16 == 0 && roundCounter > 20 ){
+            
+            createMysteryCell();
+
+        }
+        // mystery cell apear function call end
+
+        do{
+            if(players[j].winPiecesCount<4){    
                 
-                createMysteryCell();
+                diceVal = rollDice(players[j].playerName);
 
-            }else if((roundCounter - 5) % 16 == 0 && roundCounter > 20 ){
-                
-                createMysteryCell();
+                playerAction(diceVal, j);
+                printf("\n");
 
+                isSixCount--;
             }
-            // mystery cell apear function call end
+        }while(diceVal==6 && isSixCount>0 && players[j].winPiecesCount < 4);
 
-            do{
-                if(players[j].winPiecesCount<4){    
-                    
-                    diceVal = rollDice(players[j].playerName);
+        if(j<3){
+            j++;
+        }else{
+            j=0;
+        }
 
-                    playerAction(diceVal, j);
-                    printf("\n");
+        if (winners[3] != -1) {
+            break;  
+        }
 
-                    isSixCount--;
-                }
-            }while(diceVal==6 && isSixCount>0 && players[j].winPiecesCount < 4);
-
-            if(j<3){
-                j++;
-            }else{
-                j=0;
-            }
-
-            if (winners[3] != -1) {
-                break;  
-            }
-
-            if(j==firstPlayer){
-                printPieceStates();
-            }
-
+        if(j==firstPlayer){
+            printPieceStates();
         }
 
     }
+
+}
 
 void printPieceStates() {
     for (short k = 0; k < 4; k++) {
@@ -494,7 +578,6 @@ void printPieceStates() {
 
     printf("\n");
 }
-
 
 void printWinners(){
     for(short i=0; i<4; i++){
