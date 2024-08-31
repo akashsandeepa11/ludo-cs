@@ -2,6 +2,11 @@
 #define TYPES_H
 #include <stdbool.h>
 
+struct mysteryCellData {
+    short counter;
+    short isEnergised;
+};
+
 struct piece{
     short location;
     short distance;
@@ -9,15 +14,17 @@ struct piece{
     short capCount;
     bool isClockwise;
     char pieceName[3];
+    struct mysteryCellData mysteryData;
+    // short blockPieces[4];
 };
 
 struct player {
     char playerName[7];
     short boardPiecesCount;
     short winPiecesCount;
-    short blocks[2][4];
     struct piece p[4];
 };
+
 
 // in player_behaviour.c Function prototypes
 void yellowPlayer(short diceVal);

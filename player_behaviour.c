@@ -60,7 +60,8 @@ void bluePlayer(short diceVal){
     for(short pieceId = 0; pieceId < 4; pieceId++){
         
         if(players[BLUE].p[pieceId].location != -1 &&
-            players[BLUE].p[pieceId].distance + diceVal < players[BLUE].p[pieceId].homeStraightDis){
+            players[BLUE].p[pieceId].distance + diceVal < players[BLUE].p[pieceId].homeStraightDis &&
+            !(players[BLUE].p[pieceId].mysteryData.counter != -1 && players[BLUE].p[pieceId].mysteryData.isEnergised == -1)){
 
                 short newLocation = players[BLUE].p[pieceId].location; 
                 
@@ -83,8 +84,8 @@ void bluePlayer(short diceVal){
 void greenPlayer(short diceVal){
     
     if(diceVal == 6 && 
-        (players[GREEN].boardPiecesCount + players[GREEN].winPiecesCount) <= 4 &&
-        players[GREEN].winPiecesCount <= 4){
+        (players[GREEN].boardPiecesCount + players[GREEN].winPiecesCount) < 4 &&
+        players[GREEN].winPiecesCount < 4){
 
         baseToStart(GREEN);
         return;
@@ -108,7 +109,8 @@ void greenPlayer(short diceVal){
     for(short pieceId = 0; pieceId < 4; pieceId++){
         
         if(players[GREEN].p[pieceId].location != -1 &&
-            players[GREEN].p[pieceId].distance + diceVal < players[GREEN].p[pieceId].homeStraightDis){
+            players[GREEN].p[pieceId].distance + diceVal < players[GREEN].p[pieceId].homeStraightDis &&
+            !(players[GREEN].p[pieceId].mysteryData.counter != -1 && players[GREEN].p[pieceId].mysteryData.isEnergised == -1)){
 
                 for(short j=0; j<4; j++){
 
@@ -190,6 +192,8 @@ void redPlayer(short diceVal){
             }
         }
 
+    if(!(players[RED].p[capturingPieces[indexOfPieceCloseToHome]].mysteryData.counter != -1 && players[RED].p[capturingPieces[indexOfPieceCloseToHome]].mysteryData.isEnergised == -1)){
+        
         movePlayerDirectly(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);
 
         capturePiece(RED, capturingPieces[indexOfPieceCloseToHome], 
@@ -197,11 +201,10 @@ void redPlayer(short diceVal){
             beingCapture[indexOfPieceCloseToHome][1]);
 
         return;
-
+    } 
     }else if(players[RED].boardPiecesCount > 0){
 
         movePlayer(diceVal, RED);
-        // checkForMysteryCell();
         return;
     }    
 
@@ -250,7 +253,7 @@ void checkForMysteryCell(short playerId, short pieceId){
     
     if(mysteryCell == players[playerId].p[pieceId].location){
 
-        printf("####################################################################################################################################################");
+        // printf("####################################################################################################################################################");
 
         short rnd=(rand() % 6);
 
@@ -305,11 +308,27 @@ void createMysteryCell(){
 }
 
 void toBawana(short playerId, short pieceId){
-    printf("%s piece %s teleported to Bhawana\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("%s piece %s teleported to Bhawana\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("###############################################################################################################################\n");
+    if(rand() % 2){
+        
+        printf("%s piece %s feels energized, and movement speed doubles.\n\n");
+        players[playerId].p[pieceId].mysteryData.counter=3;
+        players[playerId].p[pieceId].mysteryData.isEnergised=1;
+    }else{
+        
+        printf("%s piece %s feels sick, and movement speed halves.\n\n");
+        players[playerId].p[pieceId].mysteryData.counter=3;
+        players[playerId].p[pieceId].mysteryData.isEnergised=0;
+    }
 }
 
 void toKotuwa(short playerId, short pieceId){
+    printf("###############################################################################################################################\n");
     printf("%s piece %s teleported to Kotuwa\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+
+    players[playerId].p[pieceId].mysteryData.counter=3;
+    players[playerId].p[pieceId].mysteryData.isEnergised=-1;
 }
 
 void toPitaKotuwa(short playerId, short pieceId){
@@ -317,10 +336,10 @@ void toPitaKotuwa(short playerId, short pieceId){
 
     if(players[playerId].p[pieceId].isClockwise){
         players[playerId].p[pieceId].isClockwise=!players[playerId].p[pieceId].isClockwise;
-        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n");
+        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n\n");
     }else{
-        toKotuwa(playerId, pieceId);
         printf("The %s piece %s is moving in a counter-clockwise direction. Teleporting to Kotuwa from Pita-Kotuwa\n");
+        toKotuwa(playerId, pieceId);
     }
 }
 
@@ -332,6 +351,8 @@ void toBase(short playerId, short pieceId){
     players[playerId].p[pieceId].capCount=0;
     players[playerId].p[pieceId].homeStraightDis=51;
     players[playerId].boardPiecesCount--;
+    players[playerId].p[pieceId].mysteryData.counter=-1;
+    players[playerId].p[pieceId].mysteryData.isEnergised=-1;
 }
 
 void toX(short playerId, short pieceId){
