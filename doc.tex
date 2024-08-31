@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{Documentation for the LUDO-CS Game Simulation}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This document outlines the design and implementation of the LUDO-CS game simulation, an enhanced version of the traditional Ludo game. The simulation adheres to the specifications provided, incorporating additional rules and complexities to enrich gameplay. The implementation leverages the C programming language and is structured to ensure modularity, efficiency, and maintainability.
+
+\section{Data Structures}
+
+\subsection{Structures Used}
+
+\begin{itemize}
+    \item \textbf{Player Structure (\texttt{struct player})}: Represents each player in the game. It includes fields for the player's color, the number of pieces on the board, the number of pieces at home, and an array of their pieces.
+    
+    \item \textbf{Piece Structure (\texttt{struct piece})}: Represents each game piece. It contains information about the piece’s current location, distance traveled, direction of movement (clockwise or counter-clockwise), name, and any status effects from mystery cells.
+    
+    \item \textbf{```latex
+    Mystery Cell Data Structure (\texttt{struct mysteryCellData})}: Contains information about the mystery cell, including its current location and the number of rounds it remains active.
+    \end{itemize}
+    
+    \subsection{Justification of Structures}
+    
+    \begin{itemize}
+        \item \textbf{Player Structure}: Encapsulates all relevant data for each player, facilitating easy management and access to player-specific information. The array of pieces within the player structure allows for efficient iteration and manipulation of individual pieces.
+        
+        \item \textbf{Piece Structure}: Essential for tracking the state and behavior of each piece independently. It enables the simulation to handle complex interactions such as movement, capturing, and effects from mystery cells.
+        
+        \item \textbf{Mystery Cell Data Structure}: Isolates the logic related to mystery cells, ensuring that their effects are managed separately from the primary game mechanics. This modularity simplifies the implementation and maintenance of mystery cell functionalities.
+    \end{itemize}
+    
+    \section{Function Analysis}
+    
+    \subsection{Random Value Functions}
+    
+    \begin{itemize}
+        \item \textbf{\texttt{rollDice(char *name)}}\\
+        \textbf{Description}: Simulates rolling a six-sided die and returns a value between 1 and 6.\\
+        \textbf{Time Complexity}: O(1)\\
+        \textbf{Justification}: Utilizes the \texttt{rand()} function for a single random number generation.
+        
+        \item \textbf{\texttt{tossCoin(short playerId, short pieceId)}}\\
+        \textbf{Description}: Simulates a coin toss to determine the direction of movement (clockwise or counter-clockwise) after a piece leaves the base.\\
+        \textbf{Time Complexity}: O(1)\\
+        \textbf{Justification}: Generates a random binary outcome to decide direction.
+    \end{itemize}
+    
+    \subsection{General Functions}
+    
+    \begin{itemize}
+        \item \textbf{\texttt{chooseFirstPlayer()}}\\
+        \textbf{Description}: Determines the first player by having each player roll a die and selecting the highest roller. In case of a tie, rerolls among tied players.\\
+        \textbf{Time Complexity}: O(n), where n is the number of players.\\
+        \textbf{Justification}: Iterates through all players to compare rolled values.
+        
+        \item \textbf{\texttt{isSpecialLocation(short location, short *locArr, short len)}}\\
+        \textbf{Description}: Checks if a given location is a special location (e.g., mystery cell).\\
+        \textbf{Time Complexity}: O(n), where n is the number of special locations.\\
+        \textbf{Justification}: Iterates through the array of special locations to find a match.
+        
+        \item \textbf{\texttt{updateLocation(short *locVariable, short playerID, short pieceId, short diceVal)}}\\
+        \textbf{Description}: Updates the location of a piece based on the dice value and the direction of movement.\\
+        \textbf{Time Complexity}: O(1)\\
+        \textbf{Justification}: Performs arithmetic operations to calculate the new position.
+        
+        \item \textbf{\texttt{updateLocationAndDistance(short index, short i, short diceVal)}}\\
+        \textbf{Description}: Updates both the location and the distance metrics of a piece.\\
+        \textbf{Time Complexity}: O(1)\\
+        \textbf{Justification}: Similar to \texttt{updateLocation}, with additional updates to distance variables.
+    \end{itemize}
+    
+    \subsection{Piece Moving Functions}
+    
+    \begin{itemize}
+        \item \textbf{\texttt{baseToStart(short playerIndex)}}\\
+        \textbf{Description}: Moves a piece from the base to the starting point 'X' when a six is rolled.\\
+        \textbf{Time Complexity}
