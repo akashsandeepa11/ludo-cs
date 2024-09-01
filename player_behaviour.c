@@ -210,8 +210,6 @@ void redPlayer(short diceVal){
         return;
     }    
 
-        
-
     if(diceVal == 6 && 
         (players[RED].boardPiecesCount + players[RED].winPiecesCount) < 4 &&
         players[RED].winPiecesCount < 4){
@@ -219,10 +217,8 @@ void redPlayer(short diceVal){
         baseToStart(RED);
         return;
 
-    }    
-    
+    }       
 }
-
 
 void baseToStart(short playerIndex){
 
@@ -370,48 +366,15 @@ void toApproach(short playerId, short pieceId){
 }
 
 // void createBlock(short playerId, short pieceId){
-    
-//     short counter=1;
 
-//     for(short i=0; i<4; i++){
-//         if(i != pieceId){
+//     for(short otherPieceId=0; otherPieceId<3; otherPieceId++){
 
-//             if(players[playerId].p[pieceId].location == players[playerId].p[i].location){
-                
-//                 if(players[playerId].blocks[0][0] == -1){
-                    
-//                     players[playerId].blocks[0][0] = pieceId;
-//                     players[playerId].blocks[0][1] = i;
-        
-//                     break;
-//                 }else{
+//         if(pieceId != otherPieceId){
 
-//                     while(players[playerId].blocks[0][counter] != -1){
-
-//                         if(players[playerId].blocks[0][counter+1] == -1){
-
-//                             if(players[playerId].blocks[0][0] != i && players[playerId].blocks[0][1] != i && 
-//                                 players[playerId].blocks[0][2] != i && players[playerId].blocks[0][3] != i){
-                            
-//                                 players[playerId].blocks[0][counter+1] = i;
-//                                 break;
-//                             }
-//                         }
-//                         counter++;
-                    
-//                     }
-//                 }
+//             if(players[playerId].p[pieceId].location == players[playerId].p[otherPieceId].location){
 
 
-//                 printf("####################################################################################################################################################################################\n\n"); 
-//                 printf("%s player created block with ", players[playerId].playerName);
-
-//                 for(short i=0; i<3; i++){
-//                     printf(" %s,", players[playerId].p[players[playerId].blocks[0][i]].pieceName);
-//                 }
-//                 printf(".\n");
 //             }
 //         }
 //     }
-    
 // }

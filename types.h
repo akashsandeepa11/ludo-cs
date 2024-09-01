@@ -15,7 +15,7 @@ struct piece{
     bool isClockwise;
     char pieceName[3];
     struct mysteryCellData mysteryData;
-    // short blockPieces[4];
+    short blockPieces[4];
 };
 
 struct player {
@@ -25,40 +25,36 @@ struct player {
     struct piece p[4];
 };
 
-
-// in player_behaviour.c Function prototypes
+short rollDice(char *name);
+bool tossCoin(short playerId, short pieceId);
+short chooseFirstPlayer();
+bool isSpecialLocation(short location, short *locArr, short len);
+void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId);
+bool captureIfAvailable(short playerId, short pieceId, short diceVal, bool ischeck);
+void capturePieceByPlayerId(short playerId, short pieceId);
+void updateLocation(short *locVariable, short playerID, short pieceId, short diceVal);
+void updateLocationAndDistance(short index, short i, short diceVal);
+void approchToHome(short diceVal, short index, short pieceId);
+void printWinnerMessage(int index);
+void winPlayer(short index, short i);
 void yellowPlayer(short diceVal);
 void bluePlayer(short diceVal);
-void redPlayer(short diceVal);
 void greenPlayer(short diceVal);
+void redPlayer(short diceVal);
 void baseToStart(short playerIndex);
-void createBlock(short playerId, short pieceId);
+void createMysteryCell();
+void checkForMysteryCell(short playerId, short pieceId);
 void toBawana(short playerId, short pieceId);
 void toKotuwa(short playerId, short pieceId);
 void toPitaKotuwa(short playerId, short pieceId);
 void toBase(short playerId, short pieceId);
 void toX(short playerId, short pieceId);
 void toApproach(short playerId, short pieceId);
-
-// in logic.c Function prototypes
-short rollDice(char *name);
-bool tossCoin(short playerId, short pieceId);
-short chooseFirstPlayer();
-bool isSpecialLocation(short location, short *locArr, short len);
-void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId);
-bool captureIfAvailable(short playerId, short pieceId, short diceVal, bool isCheck);
-void capturePieceByPlayerId(short playerId, short pieceId);
-void updateLocation(short *locVariable, short playerID, short pieceId, short diceVal);
-void updateLocationAndDistance(short index, short i, short diceVal);
-void approchToHome(short diceVal, short index, short pieceId);
-void winPlayer(short index, short i);
 void movePlayerDirectly(short playerId, short pieceId, short diceVal);
 void movePlayer(short diceVal, short index);
 void playerAction(short diceVal, short index);
 void iterateTheGame();
 void printPieceStates();
-void printWinners();
 void game();
-
 
 #endif
