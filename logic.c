@@ -565,12 +565,12 @@ void toBawana(short playerId, short pieceId){
     
     if(rand() % 2){
         
-        printf("%s piece %s feels energized, and movement speed doubles.\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+        printf("%s piece %s feels energized, and movement speed doubles.\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         players[playerId].p[pieceId].mysteryData.counter=3;
         players[playerId].p[pieceId].mysteryData.isEnergised=1;
     }else{
         
-        printf("%s piece %s feels sick, and movement speed halves.\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+        printf("%s piece %s feels sick, and movement speed halves.\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         players[playerId].p[pieceId].mysteryData.counter=3;
         players[playerId].p[pieceId].mysteryData.isEnergised=0;
     }
@@ -578,18 +578,19 @@ void toBawana(short playerId, short pieceId){
 
 void toKotuwa(short playerId, short pieceId){
     
-    printf("%s piece %s teleported to Kotuwa\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("%s piece %s teleported to Kotuwa\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     players[playerId].p[pieceId].mysteryData.counter=3;
     players[playerId].p[pieceId].mysteryData.isEnergised=-1;
 }
 
 void toPitaKotuwa(short playerId, short pieceId){
+
     printf("%s piece %s teleported to Pita-Kotuwa\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     if(players[playerId].p[pieceId].isClockwise){
         players[playerId].p[pieceId].isClockwise=!players[playerId].p[pieceId].isClockwise;
-        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+        printf("The %s piece %s, which was moving clockwise, has changed to moving counter-clockwise\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
     }else{
         printf("The %s piece %s is moving in a counter-clockwise direction. Teleporting to Kotuwa from Pita-Kotuwa\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
         toKotuwa(playerId, pieceId);
@@ -597,7 +598,7 @@ void toPitaKotuwa(short playerId, short pieceId){
 }
 
 void toBase(short playerId, short pieceId){
-    printf("%s piece %s teleported to Base\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("%s piece %s teleported to Base\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     players[playerId].p[pieceId].location=-1;
     players[playerId].p[pieceId].distance=-1;
@@ -609,13 +610,13 @@ void toBase(short playerId, short pieceId){
 }
 
 void toX(short playerId, short pieceId){
-    printf("%s piece %s teleported to X\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("%s piece %s teleported to X\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     players[playerId].p[pieceId].location=STARTPOINT(playerId);
 }
 
 void toApproach(short playerId, short pieceId){
-    printf("%s piece %s teleported to Approach\n\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
+    printf("%s piece %s teleported to Approach\n", players[playerId].playerName, players[playerId].p[pieceId].pieceName);
 
     players[playerId].p[pieceId].location=APROACH(playerId);
 }
@@ -891,26 +892,17 @@ void printPieceStates() {
             } else if (players[k].p[i].distance >= players[k].p[i].homeStraightDis && 
                        players[k].p[i].distance < HOME(k, i) && 
                        players[k].p[i].capCount > 0) {
-                printf("%s homepath %d. cap:%d dis:%d home:%d c:%d", 
+
+                printf("%s homepath %d", 
                        players[k].playerName,
-                       players[k].p[i].distance - players[k].p[i].homeStraightDis, 
-                       players[k].p[i].capCount, 
-                       players[k].p[i].distance,
-                       players[k].p[i].homeStraightDis,
-                       players[k].p[i].isClockwise);
+                       players[k].p[i].distance - players[k].p[i].homeStraightDis);
+
             } else if (players[k].p[i].distance >= HOME(k, i) && players[k].p[i].capCount > 0) {
-                printf("Home cap:%d dis:%d home:%d c:%d", 
-                       players[k].p[i].capCount,
-                       players[k].p[i].distance,
-                       players[k].p[i].homeStraightDis,
-                       players[k].p[i].isClockwise);
+
+                printf("Home");
             } else {
-                printf("L%d - cap:%d dis:%d home:%d c:%d", 
-                       players[k].p[i].location, 
-                       players[k].p[i].capCount, 
-                       players[k].p[i].distance,
-                       players[k].p[i].homeStraightDis,
-                       players[k].p[i].isClockwise);
+
+                printf("L%d", players[k].p[i].location);
             }
 
             printf("\n");
