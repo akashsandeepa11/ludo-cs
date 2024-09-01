@@ -31,7 +31,6 @@ void yellowPlayer(short diceVal){
         return;
     } 
 
-
     if((players[YELLOW].boardPiecesCount + players[YELLOW].winPiecesCount) >= 4
         || (players[YELLOW].boardPiecesCount + players[YELLOW].winPiecesCount) < 4 && diceVal != 6){
         
@@ -63,16 +62,19 @@ void bluePlayer(short diceVal){
             players[BLUE].p[pieceId].distance + diceVal < players[BLUE].p[pieceId].homeStraightDis &&
             !(players[BLUE].p[pieceId].mysteryData.counter != -1 && players[BLUE].p[pieceId].mysteryData.isEnergised == -1)){
 
-                short newLocation = players[BLUE].p[pieceId].location; 
-                
-                updateLocation(&newLocation, BLUE, pieceId, diceVal);
+            short newLocation = players[BLUE].p[pieceId].location; 
+            
+            updateLocation(&newLocation, BLUE, pieceId, diceVal);
 
-                if(newLocation == mysteryCell){
-                    
+            if(newLocation == mysteryCell){
+                
+                if(!captureIfAvailable(BLUE, pieceId, diceVal, false)){
+
                     movePlayerDirectly(BLUE, pieceId, diceVal);
                     capturePieceByPlayerId(BLUE, pieceId);
-                    return;
                 }
+                return;
+            }
         }
     }
 
@@ -191,7 +193,7 @@ void redPlayer(short diceVal){
 
             }
         }
-
+    
     if(!(players[RED].p[capturingPieces[indexOfPieceCloseToHome]].mysteryData.counter != -1 && players[RED].p[capturingPieces[indexOfPieceCloseToHome]].mysteryData.isEnergised == -1)){
         
         movePlayerDirectly(RED, capturingPieces[indexOfPieceCloseToHome], diceVal);

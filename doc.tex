@@ -1,10 +1,8 @@
 \documentclass{article}
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage{hyperref}
 
 \title{Documentation for the LUDO-CS Game Simulation}
-\author{}
 \date{}
 
 \begin{document}
@@ -12,294 +10,254 @@
 \maketitle
 
 \section{Introduction}
-This document outlines the design and implementation of the LUDO-CS game simulation, an enhanced version of the traditional Ludo game. The simulation adheres to the specifications provided, incorporating additional rules and complexities to enrich gameplay. The implementation leverages the C programming language and is structured to ensure modularity, efficiency, and maintainability.
+This documentation explains how the LUDO-CS game was created and how it works. It’s an improved version of the traditional Ludo game, with extra rules and challenges. The game was built using the C programming language, and the design focuses on being well-organized with efficient algorithms.
 
-\section{Data Structures}
+\section{Structures Used}
 
-\subsection{Structures Used}
+\subsection{Player Structure (\texttt{struct player})}
+This structure represents each player in the game. It includes the following fields. The memory complexity of this structure is 17 bytes, and with 4 piece structures, this field uses 68 bytes per player.
 
+\begin{enumerate}
+    \item \texttt{char playerName[7]}: This is a character array that holds the player's name, with a maximum length of 6 characters plus a null terminator. This allows for the storage of a short name or identifier for each player, ensuring that it does not exceed the allocated memory size. This field uses 7 bytes of memory per player.
+    \item \texttt{short boardPiecesCount}: This is a short integer that keeps track of how many pieces the player currently has on the board that can move. Since it's a short, it can store a relatively small number, which is sufficient for the typical game piece count of four. This field uses 2 bytes of memory per player.
+    \item \texttt{short winPiecesCount}: This short integer records the number of pieces that have successfully reached the winning condition or area in the game. It helps in determining how many pieces a player has won the game. This field uses 2 bytes of memory per player.
+    \item \texttt{struct piece p[4]}: This is an array of piece structures, representing up to 4 pieces that a player controls. Each element of this array contains detailed information about a specific game piece. This field uses 68 bytes of memory per player.
+\end{enumerate}
+
+\subsection{Piece Structure (\texttt{struct piece})}
+This structure represents all the characteristics of a game piece, such as location, name, clockwise or counter-clockwise movement, etc. The memory complexity of this structure is 17 bytes.
+
+\begin{enumerate}
+    \item \texttt{short location}: This short integer represents the current location of the piece on the game board. The value corresponds to a specific position or tile in the game and can range from -1 to 51. When the piece is on the base, the location should be -1, and at the starting point, it’s 0. This value increases by the dice value. This field uses 2 bytes of memory per player.
+    \item \texttt{short distance}: This represents the distance the piece has moved from its starting position. This value is also -1 when it’s on the base and increases by the dice value along with the location. This field uses 2 bytes of memory per player.
+    \item \texttt{short homeStraightDis}: This value represents the distance from the starting point to home. Initially, this value is set to 51 for all pieces. After the coin toss, if the piece moves counterclockwise, this value changes to 55. If the piece is about to reach the home straight without capturing another piece, the value increases by 52, requiring the piece to make another round until it captures an opponent's piece. This field uses 2 bytes of memory per player.
+    \item \texttt{short capCount}: This attribute indicates how many pieces have been captured by this piece. The value increases each time it captures another piece. This field uses 2 bytes of memory per player.
+    \item \texttt{bool isClockwise}: This Boolean value determines the direction in which the piece moves on the board. If true, the piece moves clockwise; if false, it moves counterclockwise. This field uses 1 byte of memory per player.
+    \item \texttt{char pieceName[3]}: This is a 3-character array that holds the name or identifier for the piece. It allows for a short, memorable label (such as "Y1", "Y2"), helping to easily print each piece. This field uses 3 bytes of memory per player.
+    \item \texttt{struct mysteryCellData mysteryData}: This structure's data is used when a player is teleported to Bhawana or Kotuwa. For more details, refer to the \texttt{struct mysteryCellData} section. This field uses 4 bytes of memory per player.
+\end{enumerate}
+
+\subsection{Mystery Cell Data Structure (\texttt{struct mysteryCellData})}
+This structure holds special data that is important for handling the mystery cells Bhawana and Kotuwa. The total memory complexity for this structure is 4 bytes.
+
+\begin{enumerate}
+    \item \texttt{short counter}: This short integer serves as a counter. When a player is teleported to Bhawana or Kotuwa, it is initially set to 3. The value decreases by 1 each round until it reaches -1, at which point it stops. This field uses 2 bytes of memory per player.
+    \item \texttt{short isEnergised}: This integer indicates whether the piece is energized or sick. This field uses 2 bytes of memory per player.
+\end{enumerate}
+
+\section{Function Analysis}
+
+\subsection{\texttt{void rollDice(char name)}}
 \begin{itemize}
-    \item \textbf{Player Structure (\texttt{struct player})}: Represents each player in the game. It includes fields for the player's color, the number of pieces on the board, the number of pieces at home, and an array of their pieces.
-    
-    \item \textbf{Piece Structure (\texttt{struct piece})}: Represents each game piece. It contains information about the piece’s current location, distance traveled, direction of movement (clockwise or counter-clockwise), name, and any status effects from mystery cells.
-    
-    \item \textbf{Mystery Cell Data Structure (\texttt{struct mysteryCellData})}: Contains information about the mystery cell, including its current location and the number of rounds it remains active.
-    \end{itemize}
-    
-    \subsection{Justification of Structures}
-    
-    \begin{itemize}
-        \item \textbf{Player Structure}: Encapsulates all relevant data for each player, facilitating easy management and access to player-specific information. The array of pieces within the player structure allows for efficient iteration and manipulation of individual pieces.
-        
-        \item \textbf{Piece Structure}: Essential for tracking the state and behavior of each piece independently. It enables the simulation to handle complex interactions such as movement, capturing, and effects from mystery cells.
-        
-        \item \textbf{Mystery Cell Data Structure}: Isolates the logic related to mystery cells, ensuring that their effects are managed separately from the primary game mechanics. This modularity simplifies the implementation and maintenance of mystery cell functionalities.
-    \end{itemize}
-    
-    \section{Function Analysis}
-    
-    \subsection{Random Value Functions}
-    
-    \begin{itemize}
-        \item \textbf{\texttt{rollDice(char *name)}}\\
-        \textbf{Description}: Simulates rolling a six-sided die and returns a value between 1 and 6.\\
-        \textbf{Time Complexity}: O(1)\\
-        \textbf{Justification}: Utilizes the \texttt{rand()} function for a single random number generation.
-        
-        \item \textbf{\texttt{tossCoin(short playerId, short pieceId)}}\\
-        \textbf{Description}: Simulates a coin toss to determine the direction of movement (clockwise or counter-clockwise) after a piece leaves the base.\\
-        \textbf{Time Complexity}: O(1)\\
-        \textbf{Justification}: Generates a random binary outcome to decide direction.
-    \end{itemize}
-    
-    \subsection{General Functions}
-    
-    \begin{itemize}
-        \item \textbf{\texttt{chooseFirstPlayer()}}\\
-        \textbf{Description}: Determines the first player by having each player roll a die and selecting the highest roller. In case of a tie, rerolls among tied players.\\
-        \textbf{Time Complexity}: O(n), where n is the number of players.\\
-        \textbf{Justification}: Iterates through all players to compare rolled values.
-        
-        \item \textbf{\texttt{isSpecialLocation(short location, short *locArr, short len)}}\\
-        \textbf{Description}: Checks if a given location is a special location (e.g., mystery cell).\\
-        \textbf{Time Complexity}: O(n), where n is the number of special locations.\\
-        \textbf{Justification}: Iterates through the array of special locations to find a match.
-        
-        \item \textbf{\texttt{updateLocation(short *locVariable, short playerID, short pieceId, short diceVal)}}\\
-        \textbf{Description}: Updates the location of a piece based on the dice value and the direction of movement.\\
-        \textbf{Time Complexity}: O(1)\\
-        \textbf{Justification}: Performs arithmetic operations to calculate the new position.
-        
-        \item \textbf{\texttt{updateLocationAndDistance(short index, short i, short diceVal)}}\\
-        \textbf{Description}: Updates both the location and the distance metrics of a piece.\\
-        \textbf{Time Complexity}: O(1)\\
-        \textbf{Justification}: Similar to \texttt{updateLocation}, with additional updates to distance variables.
-    \end{itemize}
-    
-    \subsection{Piece Moving Functions}
-    
-    \begin{itemize}
-        \item \textbf{\texttt{baseToStart(short playerIndex)}}\\
-        \textbf{Description}: Moves a piece from the base to the starting point 'X' when a six is rolled.\\
-        \textbf{Time Complexity}```latex
-        Mystery Cell Data Structure (\texttt{struct mysteryCellData})}: Contains information about the mystery cell, including its current location and the number of rounds it remains active.
-        \end{itemize}
-        
-        \subsection{Justification of Structures}
-        
-        \begin{itemize}
-            \item \textbf{Player Structure}: Encapsulates all relevant data for each player, facilitating easy management and access to player-specific information. The array of pieces within the player structure allows for efficient iteration and manipulation of individual pieces.
-            
-            \item \textbf{Piece Structure}: Essential for tracking the state and behavior of each piece independently. It enables the simulation to handle complex interactions such as movement, capturing, and effects from mystery cells.
-            
-            \item \textbf{Mystery Cell Data Structure}: Isolates the logic related to mystery cells, ensuring that their effects are managed separately from the primary game mechanics. This modularity simplifies the implementation and maintenance of mystery cell functionalities.
-        \end{itemize}
-        
-        \section{Function Analysis}
-        
-        \subsection{Random Value Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{rollDice(char *name)}}\\
-            \textbf{Description}: Simulates rolling a six-sided die and returns a value between 1 and 6.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Utilizes the \texttt{rand()} function for a single random number generation.
-            
-            \item \textbf{\texttt{tossCoin(short playerId, short pieceId)}}\\
-            \textbf{Description}: Simulates a coin toss to determine the direction of movement (clockwise or counter-clockwise) after a piece leaves the base.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Generates a random binary outcome to decide direction.
-        \end{itemize}
-        
-        \subsection{General Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{chooseFirstPlayer()}}\\
-            \textbf{Description}: Determines the first player by having each player roll a die and selecting the highest roller. In case of a tie, rerolls among tied players.\\
-            \textbf{Time Complexity}: O(n), where n is the number of players.\\
-            \textbf{Justification}: Iterates through all players to compare rolled values.
-            
-            \item \textbf{\texttt{isSpecialLocation(short location, short *locArr, short len)}}\\
-            \textbf{Description}: Checks if a given location is a special location (e.g., mystery cell).\\
-            \textbf{Time Complexity}: O(n), where n is the number of special locations.\\
-            \textbf{Justification}: Iterates through the array of special locations to find a match.
-            
-            \item \textbf{\texttt{updateLocation(short *locVariable, short playerID, short pieceId, short diceVal)}}\\
-            \textbf{Description}: Updates the location of a piece based on the dice value and the direction of movement.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Performs arithmetic operations to calculate the new position.
-            
-            \item \textbf{\texttt{updateLocationAndDistance(short index, short i, short diceVal)}}\\
-            \textbf{Description}: Updates both the location and the distance metrics of a piece.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Similar to \texttt{updateLocation}, with additional updates to distance variables.
-        \end{itemize}
-        
-        \subsection{Piece Moving Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{baseToStart(short playerIndex)}}\\
-            \textbf{Description}: Moves a piece from the base to the starting point 'X' when a six is rolled.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the piece’s location and player’s piece counts.
-            
-            \item \textbf{\texttt{movePlayerDirectly(short playerId, short pieceId, short diceVal)}}\\
-            \textbf{Description}: Moves a player's piece directly to a new location and handles interactions like capturing or landing on a mystery cell.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces on the board.\\
-            \textbf{Justification}: May need to check interactions with all other pieces.
-            
-            \item \textbf{\texttt{movePlayer(short diceVal, short index)}}\\
-            \textbf{Description}: Handles the movement logic for a player based on the dice value.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces the player has.\\
-            \textbf{Justification}: Iterates through the player's pieces to determine the best move.
-            
-            \item \textbf{\texttt{approchToHome(short diceVal, short index, short pieceId)}}\\
-            \textbf{Description}: Manages the movement of a piece as it approaches the home straight, ensuring it enters with the exact dice roll.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Checks and updates the piece’s position relative to home.
-            
-            \item \textbf{\texttt{winPlayer(short index, short i)}}\\
-            \textbf{Description}: Handles the logic when a player successfully brings all their pieces home, declaring them as the winner.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Updates player status and outputs the winning message.
-        \end{itemize}
-        
-        \subsection{Capture Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId)}}\\
-            \textbf{Description}: Captures an opponent's piece, sending it back to the base.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the state of the captured piece.
-            
-            \item \textbf{\texttt{captureIfAvailable(short playerId, short pieceId, short diceVal, bool ischeck)}}\\
-            \textbf{Description}: Checks if capturing an opponent's piece is possible with the current dice roll and performs the capture if applicable.\\
-            \textbf{Time Complexity}: O(n), where n is the number of opponent pieces.\\
-            \textbf{Justification}: Iterates through opponent pieces to find capturable targets.
-            
-            \item \textbf{\texttt{capturePieceByPlayerId(short index, short pieceId)}}\\
-            \textbf{Description}: Captures a piece based on the player ID and piece ID.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly targets and updates the specific piece’s state.
-        \end{itemize}
-        
-        \subsection{Player Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{yellowPlayer(short diceVal)}}\\
-            \textbf{Description}: Implements the behavior logic specific to the yellow player, prioritizing winning over capturing.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces.\\
-            \textbf{Justification}: Iterates through pieces to determine optimal moves based on strategy.
-            
-            \item \textbf{\texttt{bluePlayer(short diceVal)}}\\
-            \textbf{Description}: Implements the behavior logic for the blue player, focusing on randomness and interaction with mystery cells.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces.\\
-            \textbf{Justification}: Follows a cyclic pattern and prioritizes interactions with mystery cells.
-            
-            \item \textbf{\texttt{greenPlayer(short diceVal)}}\\
-            \textbf{Description}: Implements the behavior logic for the green player, emphasizing blocking and strategic movement.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces.\\
-            \textbf{Justification}: Evaluates the board to create or maintain blocks while progressing towards home.
-            
-            \item \textbf{\texttt{redPlayer(short diceVal)}}\\
-            \textbf{Description}: Implements the behavior logic for the red player, which is aggressive in capturing opponent pieces.\\
-            \textbf{Time Complexity}: O(n), where n is the number of opponent pieces.\\
-            \textbf{Justification}: Prioritizes moves that result in capturing opponent pieces.
-        \end{itemize}
-        
-        \subsection{Mystery Cell Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{checkForMysteryCell(short playerId, short pieceId)}}\\
-            \textbf{Description}: Checks if a piece has landed on a mystery cell and applies the corresponding effect.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly verifies the piece’s location against the mystery cell’s location.
-            
-            \item \textbf{\texttt{createMysteryCell()}}\\
-            \textbf{Description}: Randomly spawns a mystery cell on an unoccupied standard cell after two
-        
-         rounds have passed.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces on the board.\\
-            \textbf{Justification}: Ensures the mystery cell does not spawn on an occupied cell by checking all pieces.
-            
-            \item \textbf{\texttt{toBawana(short playerId, short pieceId)}}\\
-            \textbf{Description}: Teleports a piece to Bhawana, applying energizing or sick effects.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the piece’s location and status effects.
-            
-            \item \textbf{\texttt{toKotuwa(short playerId, short pieceId)}}\\
-            \textbf{Description}: Teleports a piece to Kotuwa, preventing it from moving for the next four rounds.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Sets a status flag and updates the piece’s location.
-            
-            \item \textbf{\texttt{toPitaKotuwa(short playerId, short pieceId)}}\\
-            \textbf{Description}: Teleports a piece to Pita-Kotuwa, altering its direction or teleporting it based on current movement.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the piece’s direction or location based on conditions.
-            
-            \item \textbf{\texttt{toBase(short playerId, short pieceId)}}\\
-            \textbf{Description}: Sends a piece back to the base.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Resets the piece’s location and status.
-            
-            \item \textbf{\texttt{toX(short playerId, short pieceId)}}\\
-            \textbf{Description}: Teleports a piece to the starting point 'X'.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the piece’s location.
-            
-            \item \textbf{\texttt{toApproach(short playerId, short pieceId)}}\\
-            \textbf{Description}: Teleports a piece to the approach cell, allowing it to enter the home straight.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly updates the piece’s location.
-        \end{itemize}
-        
-        \subsection{Game Flow Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{playerAction(short diceVal, short index)}}\\
-            \textbf{Description}: Executes the actions a player takes based on the dice roll and their strategy.\\
-            \textbf{Time Complexity}: O(n), where n is the number of pieces.\\
-            \textbf{Justification}: Coordinates the movement, capturing, and interactions of a player's pieces.
-            
-            \item \textbf{\texttt{iterateTheGame()}}\\
-            \textbf{Description}: Manages the progression of the game through multiple rounds until a winner is determined.\\
-            \textbf{Time Complexity}: O(m * n), where m is the number of rounds and n is the number of pieces per player.\\
-            \textbf{Justification}: Iteratively processes each round and player actions until game termination conditions are met.
-        \end{itemize}
-        
-        \subsection{Print Functions}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{printWinnerMessage(int index)}}\\
-            \textbf{Description}: Outputs a message declaring the winning player.\\
-            \textbf{Time Complexity}: O(1)\\
-            \textbf{Justification}: Directly prints the winner based on the provided index.
-            
-            \item \textbf{\texttt{printPieceStates()}}\\
-            \textbf{Description}: Displays the current state of all pieces for each player after every round.\\
-            \textbf{Time Complexity}: O(n), where n is the total number of pieces across all players.\\
-            \textbf{Justification}: Iterates through all players and their pieces to generate the status report.
-        \end{itemize}
-        
-        \subsection{Initial Call From Main Function}
-        
-        \begin{itemize}
-            \item \textbf{\texttt{game()}}\\
-            \textbf{Description}: Serves as the entry point for the game simulation, initializing game state and starting the game loop.\\
-            \textbf{Time Complexity}: O(m * n), where m is the number of rounds and n is the number of pieces.\\
-            \textbf{Justification}: Sets up initial conditions and delegates control to \texttt{iterateTheGame()} to manage the game flow.
-        \end{itemize}
-        
-        \section{Program Efficiency}
-        
-        The LUDO-CS simulation is designed with a focus on efficiency and scalability. Most core functions operate in constant time (O(1)), ensuring rapid execution of fundamental game mechanics such as dice rolling, piece movement, and capturing. Functions that involve iteration over players or pieces exhibit linear time complexity (O(n)), which is optimal given the necessity to evaluate each piece or player in scenarios like determining the first player or updating piece states.
-        
-        The use of structured data encapsulates related attributes, minimizing the need for redundant computations and facilitating quick access to essential information. Additionally, the separation of concerns through distinct functions for different game aspects (e.g., movement, capturing, mystery cells) enhances maintainability and allows for potential future optimizations without affecting unrelated components.
-        
-        Overall, the program efficiently handles all required operations, ensuring smooth simulation even as the complexity of the game state increases with multiple players and active pieces.
-        
-        \section{Conclusion}
-        
-        The LUDO-CS game simulation successfully implements the extended rules and functionalities outlined in the assignment specifications. Through the use of well-defined data structures and a comprehensive suite of functions, the program accurately models the dynamics of LUDO-CS, including player behaviors, piece movements, capturing mechanics, and the introduction of mystery cells. The attention to time complexity and program efficiency ensures that the simulation runs smoothly, providing an effective tool for analyzing game strategies and outcomes without performance bottlenecks. The modular design facilitates easy maintenance and potential enhancements, making the simulation robust and adaptable to future requirements.
-        
-        \end{document}
+    \item \textbf{Description}: Simulates rolling a six-sided die and prints the value with the player name, then returns a value between 1 and 6.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Utilizes the \texttt{rand()} function for a single random number generation.
+\end{itemize}
+
+\subsection{\texttt{tossCoin(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Simulates a coin toss to determine the direction of movement (clockwise or counterclockwise) after a piece leaves the base.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Generates a random binary outcome to decide the direction.
+\end{itemize}
+
+\subsection{\texttt{void chooseFirstPlayer()}}
+\begin{itemize}
+    \item \textbf{Description}: Determines the first player by having each player roll a die and selecting the highest roller. If two or more players get the same highest value, re-roll the die for each player.
+    \item \textbf{Time Complexity}: O(1) (In this case, O(1) still holds because the recursion does not significantly increase complexity due to the small fixed input size).
+    \item \textbf{Justification}: A short array with 4 elements is used to store the dice roll values for each player, along with a short variable \texttt{max} to store the highest dice roll value, another variable to store the index of the player with the maximum roll, and a boolean \texttt{isMoreMax} to check if more than one player rolled the same highest value. The function rolls the dice for each player, stores the values in the array, identifies the highest value in the array, and finally returns the player ID of the player who rolled the highest value.
+\end{itemize}
+
+\subsection{\texttt{bool isSpecialLocation(short location, short locArr, short len)}}
+\begin{itemize}
+    \item \textbf{Description}: In the Ludo game, certain cells where pieces cannot be captured, such as approach cells or starting points, are considered special. This function checks whether a piece is in one of these protected cells.
+    \item \textbf{Time Complexity}: O(n), where n is the number of special locations.
+    \item \textbf{Justification}: The function iterates through the array of special locations to find a match. If a match is found, it returns true.
+\end{itemize}
+
+\subsection{\texttt{void updateLocation(short locVariable, short playerID, short pieceId, short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Updates the location of a piece based on the dice value and the direction of movement via a pointer to the relevant variable.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Performs arithmetic operations to calculate the new position.
+\end{itemize}
+
+\subsection{\texttt{void updateLocationAndDistance(short index, short i, short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Updates the distance after calling the \texttt{updateLocation} function.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Similar to \texttt{updateLocation}, with additional updates to distance variables.
+\end{itemize}
+
+\subsection{\texttt{void baseToStart(short playerIndex)}}
+\begin{itemize}
+    \item \textbf{Description}: Moves a piece from the base to the starting point 'X' when a six is rolled.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Directly updates the piece’s location and the player’s piece counts.
+\end{itemize}
+
+\subsection{\texttt{void movePlayerDirectly(short playerId, short pieceId, short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Moves a player's piece directly whether it is on the standard path or the home straight and handles interactions like landing on a mystery cell.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Checks if the mystery cell is activated; if active, performs some calculations on the dice value. Then, updates the new location, prints movement details, and checks for the mystery cell again. Finally, calls the winning function if certain conditions are met.
+\end{itemize}
+
+\subsection{\texttt{void movePlayer(short diceVal, short index)}}
+\begin{itemize}
+    \item \textbf{Description}: Handles the movement logic for a player based on the dice value.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Checks certain conditions to determine how the player should move.
+\end{itemize}
+
+\subsection{\texttt{void approchToHome(short diceVal, short index, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Handles home straight movement.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Checks if the dice value equals the distance from the homepath location to Home. If it’s true, it calls the \texttt{winPlayer} function.
+\end{itemize}
+
+\subsection{\texttt{void winPlayer(short index, short i)}}
+\begin{itemize}
+    \item \textbf{Description}: Handles the logic when a player successfully brings all their pieces home, declaring them as the winner.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: After the piece reaches home, this function increases the player's \texttt{winPiece} count by one and decreases the \texttt{boardPieceCount} by one. It also checks if all of a player's pieces have reached home, and if so, it calls the \texttt{printWinnerMessage} function.
+\end{itemize}
+
+\subsection{\texttt{void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Captures an opponent's piece, sending it back to the base with the player ID, piece ID, opponent player ID, and opponent’s piece ID.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: This function resets all details of the captured player and prints a capture message.
+\end{itemize}
+
+\subsection{\texttt{bool captureIfAvailable(short playerId, short pieceId, short diceVal, bool ischeck)}}
+\begin{itemize}
+    \item \textbf{Description}: Checks if capturing an opponent's piece is possible with the current dice roll and performs the capture if applicable.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Iterates through opponent pieces to find capturable targets. If the \texttt{isCheck} parameter is true, then this function returns true if a piece is available to capture instead of capturing that piece.
+\end{itemize}
+
+\subsection{\texttt{void yellowPlayer(short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Implements the behavior logic specific to the yellow player, prioritizing winning over capturing.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: First, checks if there are any pieces in the base; if so, moves all pieces to the starting point if the dice value equals 6. Then, checks if there are any pieces that haven't made at least one capture and attempts to capture an opponent's piece. Finally, moves the piece that is closest to home.
+\end{itemize}
+
+\subsection{\texttt{void bluePlayer(short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Implements the behavior logic for the blue player, focusing on randomness and interaction with mystery cells.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Checks if there is a piece that can move to the mystery cell with the current dice value.
+\end{itemize}
+
+\subsection{\texttt{void greenPlayer(short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Implements the behavior logic for the green player, emphasizing blocking and strategic movement.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Checks if there is a piece that can move onto a piece that belongs to the green player. The first priority is to move all pieces from the base to the starting point.
+\end{itemize}
+
+\subsection{\texttt{void redPlayer(short diceVal)}}
+\begin{itemize}
+    \item \textbf{Description}: Implements the behavior logic for the red player, which is aggressive in capturing opponent pieces.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: A 4-element short array is initialized to store piece IDs belonging to the red player that can capture any piece on the standard path. Then checks for capturable pieces and stores their player IDs and piece IDs in the \texttt{beingCapture} 2D array. After referring to that 2D array, it decides which piece is closest to home and captures it.
+\end{itemize}
+
+\subsection{\texttt{void checkForMysteryCell(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Checks if a piece has landed on a mystery cell and applies the corresponding effect.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Gets a random value in the range of 1 to 6. Calls the teleporting functions through a switch case.
+\end{itemize}
+
+\subsection{\texttt{void createMysteryCell()}}
+\begin{itemize}
+    \item \textbf{Description}: Randomly spawns a mystery cell on an unoccupied standard cell after two rounds have passed.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Gets a random cell value in the range 0 to 51. If that value equals the previous value or if there is a piece in that cell, it gets the random value again. The value is stored in the global variable \texttt{short mysteryCell}. Prints the mystery cell creation expression.
+\end{itemize}
+
+\subsection{\texttt{void toBawana(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Teleports a piece to Bhawana, applying energizing or sick effects.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Randomly decides whether the piece is energized or sick and updates the specific player's mystery cell data structure.
+\end{itemize}
+
+\subsection{\texttt{void toKotuwa(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Teleports a piece to Kotuwa, preventing it from moving for the next four rounds.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Updates the mystery cell data structure suitable for Kotuwa.
+\end{itemize}
+
+\subsection{\texttt{void toPitaKotuwa(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Teleports a piece to Pita-Kotuwa, altering its direction or teleporting it based on the current movement direction.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: In this function, the piece's mystery cell counter is set and \texttt{isEnergized} is set to -1.
+\end{itemize}
+
+\subsection{\texttt{void toBase(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Sends a piece back to the base.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: In this function, the piece is sent to the base and all the values are reset.
+\end{itemize}
+
+\subsection{\texttt{void toX(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Teleports a piece to the starting point 'X'.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Directly updates the piece’s location to the starting point.
+\end{itemize}
+
+\subsection{\texttt{void toApproach(short playerId, short pieceId)}}
+\begin{itemize}
+    \item \textbf{Description}: Teleports a piece to the approach cell, allowing it to enter the home straight.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Directly updates the piece’s location to the approach cell.
+\end{itemize}
+
+\subsection{\texttt{void playerAction(short diceVal, short index)}}
+\begin{itemize}
+    \item \textbf{Description}: Executes the actions a player takes based on the dice roll and their strategy.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Calls all the player functions through a switch case with the dice value and player ID.
+\end{itemize}
+
+\subsection{\texttt{void iterateTheGame()}}
+\begin{itemize}
+    \item \textbf{Description}: Manages the progression of the game through multiple rounds until a winner is determined. It also counts for the mystery cells.
+    \item \textbf{Time Complexity}: O(n), where n is the number of rounds.
+    \item \textbf{Justification}: In this function, an infinite loop runs until the \texttt{winner} variable is no longer null, indicating a winner. Inside the main loop, there is another while loop that handles the scenario when the dice value is 6, granting the player an additional turn. The player can have a maximum of 3 consecutive turns if they roll a 6 consecutively.
+\end{itemize}
+
+\subsection{\texttt{void printWinnerMessage(int index)}}
+\begin{itemize}
+    \item \textbf{Description}: Outputs a message declaring the winning player.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Directly prints the winner based on the provided index.
+\end{itemize}
+
+\subsection{\texttt{void printPieceStates()}}
+\begin{itemize}
+    \item \textbf{Description}: Displays the current state and cell location of all pieces for each player after every round.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Iterates through all players and their pieces to generate the status report.
+\end{itemize}
+
+\subsection{\texttt{void game()}}
+\begin{itemize}
+    \item \textbf{Description}: Serves as the entry point for the game simulation, initializing the game state and starting the game loop.
+    \item \textbf{Time Complexity}: O(1)
+    \item \textbf{Justification}: Sets up initial conditions and delegates control to \texttt{iterateTheGame()} to manage the game flow.
+\end{itemize}
+
+\section{Program Efficiency}
+This LUDO-CS simulation is designed to be both efficient and scalable. Most functions have constant time complexity. To reduce memory usage, the algorithm primarily operates with short data types, which only require 2 bytes, and bool types to further minimize memory complexity. The program efficiently handles all required operations, ensuring a smooth simulation even as the game state becomes more complex with multiple players and active pieces.
+
+\end{document}

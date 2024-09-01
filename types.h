@@ -47,7 +47,7 @@ short chooseFirstPlayer();
 bool isSpecialLocation(short location, short *locArr, short len);
 void capturePiece(short playerId, short pieceId, short opPlayerId, short opPieceId);
 bool captureIfAvailable(short playerId, short pieceId, short diceVal, bool isCheck);
-void capturePieceByPlayerId(short index, short pieceId);
+void capturePieceByPlayerId(short playerId, short pieceId);
 void updateLocation(short *locVariable, short playerID, short pieceId, short diceVal);
 void updateLocationAndDistance(short index, short i, short diceVal);
 void approchToHome(short diceVal, short index, short pieceId);
